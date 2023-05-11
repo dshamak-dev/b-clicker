@@ -1,27 +1,28 @@
+import { getGame } from "../game.manager.js";
 import Component from "./component.js";
 
 export default class Nav extends Component {
   constructor(props) {
     super(
       Object.assign({}, props, {
+        id: 'nav',
         style: `
-          position: absolute;
+          position: response;
           top: 0;
           left: 0;
           display: flex;
           justify-content: space-between;
           width: 100%;
           padding: 0.2em;
-          background-color: #d9d9d9;
         `,
       })
     );
 
-    const infoBtn = new GameComponent({
+    const infoBtn = new Component({
       parent: this.el,
     });
 
-    const menuBtn = this.menuBtn = new GameComponent({
+    const menuBtn = (this.menuBtn = new Component({
       parent: this.el,
       className: "menu-btn pointer",
       style: `
@@ -30,14 +31,19 @@ export default class Nav extends Component {
             background-color: black;
             border-radius: 0.4em 0 0.4em 0;
             display: flex;
-            gap: 2px;
+            gap: 4px;
             flex-direction: column;
             text-align: center;
             justify-content: center;
             align-items: center;
             color: white;
           `,
-    });
+      children: new Array(3)
+        .fill(0)
+        .map(
+          () => new Component({ style: "width: 60%; border-bottom: 2px solid white;" })
+        ),
+    }));
     menuBtn.el.onclick = this.handleToggleMenu.bind(this);
 
     this.append(infoBtn, menuBtn);
@@ -45,23 +51,24 @@ export default class Nav extends Component {
 
   handleToggleMenu(e) {
     const game = getGame();
-    const screen = game?.getScreen('menu');
+    const landingScreen = game.screens[0];
 
-    if (screen == null) {
+    if (landingScreen == null) {
       return;
     }
 
-    screen.visible ? screen.hide() : screen.show();
+    landingScreen.visible ? landingScreen.hide() : landingScreen.show();
   }
 
   render() {
     super.render();
-    const game = getGame();
+    // const game = getGame();
 
-    const hasActiveSession = game?.activeMission != null;
+    // const hasActiveSession = game?.screens[1].visible;
 
-    if (this.menuBtn?.el) {
-      this.menuBtn.el.style.setProperty('display', hasActiveSession ? 'flex' : 'none');
-    }
+    // if (this.el) {
+    //   this.el.classList.toggle('disabled', !hasActiveSession);
+    //   this.addStyle('opacity', hasActiveSession ? 1 : 0);
+    // }
   }
 }

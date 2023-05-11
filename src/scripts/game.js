@@ -1,6 +1,7 @@
 import Component from "./components/component.js";
 import GameScreen from "./screens/game.screen.js";
 import LandingScreen from "./screens/landing.screen.js";
+import { getScreenSize } from "./utils/dom.utils.js";
 
 export default class Game extends Component {
   version = 0.01;
@@ -42,6 +43,8 @@ export default class Game extends Component {
       new GameScreen({ parent: this.el }),
     ];
 
+    window.addEventListener("resize", this.render.bind(this));
+
     this.render();
   }
 
@@ -51,6 +54,10 @@ export default class Game extends Component {
 
   render() {
     super.render();
+
+    const { width, height } = getScreenSize();
+
+    this.addStyle('min-width', `${width}px`);
 
     const targetScreen = this.activeScreen;
 

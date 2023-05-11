@@ -24,6 +24,10 @@ main {
   cursor: pointer;
 }
 
+.disabled {
+  pointer-events: none;
+}
+
 .select-none {
   user-select: none;
 }

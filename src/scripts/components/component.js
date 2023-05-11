@@ -1,3 +1,5 @@
+import { getScreenContentSize } from "../utils/dom.utils.js";
+
 export default class Component {
   el = null;
   parent = null;
@@ -13,13 +15,17 @@ export default class Component {
   }
 
   get rect() {
-    return this.el?.getBoundingClientRect() || { width: 0, height: 0 };
+    return getScreenContentSize();
   }
 
   constructor({ children = [], ...props } = { children: [] }) {
     Object.assign(this, { fitFont: false, }, props);
 
     this.el = document.createElement(this.tagType);
+
+    if (this.id != null) {
+      this.el.setAttribute('id', this.id);
+    }
 
     this.append(...children);
 

@@ -1,9 +1,6 @@
+import { getScreenWidth } from "../utils/dom.utils.js";
 import Component from "./component.js";
 import Nav from "./nav.js";
-
-const MIN_SCREEN_WIDTH = 375;
-const FULLSCREEN_WIDTH_BREAKPOINT = 720;
-const SCREEN_WIDTH_PROPOTIONS = 1 / 3;
 
 export default class ScreenComponent extends Component {
   layer = 1;
@@ -11,21 +8,11 @@ export default class ScreenComponent extends Component {
   nav;
 
   get screenWidth() {
-    const isPortrait = screen.orientation?.type?.includes("portrait");
-    const screenWidth = screen.width;
-    const useFullscreen =
-      isPortrait && screenWidth <= FULLSCREEN_WIDTH_BREAKPOINT;
-
-    const windowHeight = screen.height;
-    const targetWidth = useFullscreen
-      ? screen.width
-      : SCREEN_WIDTH_PROPOTIONS * windowHeight;
-
-    return Math.max(targetWidth, MIN_SCREEN_WIDTH);
+    return getScreenWidth();
   }
 
   constructor(props) {
-    super(Object.assign({ layer: 0, displayType: 'block' }, props));
+    super(Object.assign({ layer: 0, displayType: "block" }, props));
 
     this.layer = props?.layer || 0;
 
@@ -40,13 +27,9 @@ export default class ScreenComponent extends Component {
         background-color: #D9D9D9;
         z-index: ${this.layer || 0};
         overflow: hidden;
-        ${this.style || ''},
+        ${this.style || ""},
       `
     );
-
-    // this.nav = new Nav({ parent: this.el });
-
-    // this.append(this.nav);
 
     this.update();
     this.render();

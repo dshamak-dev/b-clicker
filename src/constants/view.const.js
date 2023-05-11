@@ -1,0 +1,3 @@
+export const MIN_SCREEN_WIDTH = 375;
+export const FULLSCREEN_WIDTH_BREAKPOINT = 720;
+export const SCREEN_WIDTH_PROPOTIONS = 1 / 3;
