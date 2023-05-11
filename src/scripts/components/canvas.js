@@ -25,6 +25,7 @@ export default class Canvas extends Component {
     super(
       Object.assign({}, props, {
         tagType: "canvas",
+        style: 'max-width: 100vw;'
       })
     );
 

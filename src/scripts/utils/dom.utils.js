@@ -1,13 +1,17 @@
 import { FULLSCREEN_WIDTH_BREAKPOINT, MIN_SCREEN_WIDTH, SCREEN_WIDTH_PROPOTIONS } from "../../constants/view.const.js";
 
+export const getPortraitOrientationState = () => {
+  return screen.orientation?.type?.includes("portrait");
+}; 
+
 export const getScreenWidth = () => {
-  const isPortrait = screen.orientation?.type?.includes("portrait");
+  const isPortrait = getPortraitOrientationState();
   const screenWidth = window.innerWidth;
   const useFullscreen =
     isPortrait && screenWidth <= FULLSCREEN_WIDTH_BREAKPOINT;
 
   const windowHeight = getScreenHeight();
-  const targetWidth = useFullscreen
+  const targetWidth = isPortrait || useFullscreen
     ? screenWidth
     : SCREEN_WIDTH_PROPOTIONS * windowHeight;
 

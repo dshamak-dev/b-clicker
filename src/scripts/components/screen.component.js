@@ -1,4 +1,4 @@
-import { getScreenWidth } from "../utils/dom.utils.js";
+import { getPortraitOrientationState, getScreenWidth } from "../utils/dom.utils.js";
 import Component from "./component.js";
 import Nav from "./nav.js";
 
@@ -23,6 +23,7 @@ export default class ScreenComponent extends Component {
         --root-font-size: calc(var(--root-width) * 0.08);
         font-size: var(--root-font-size); 
         width: var(--root-width);
+        min-width: 100%;
         height: var(--root-height);
         background-color: #D9D9D9;
         z-index: ${this.layer || 0};
@@ -43,15 +44,15 @@ export default class ScreenComponent extends Component {
     super.render();
 
     const _self = this;
-    const isOverlayScreen = true;
+    const isPortrait = getPortraitOrientationState();
 
     this.el.classList.toggle("visible", this.visible);
     this.el.style.setProperty(
       "--root-width",
-      `max(min(${this.screenWidth}px, 100vw), fit-content)`
+      isPortrait ? 'width: 100vw; height: 100vh; height: 100dvh;' :`max(min(${this.screenWidth}px, 100vw), fit-content)`
     );
     this.el.style.display = this.visible ? this.displayType : "none";
-    this.el.style.position = isOverlayScreen ? "absolute" : "relative";
+    this.el.style.position = "absolute";
 
     // const hasNav = this.children.find(c => c === _self.nav);
 

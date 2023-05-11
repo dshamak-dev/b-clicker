@@ -1,7 +1,7 @@
 import Component from "./components/component.js";
 import GameScreen from "./screens/game.screen.js";
 import LandingScreen from "./screens/landing.screen.js";
-import { getScreenSize } from "./utils/dom.utils.js";
+import { getPortraitOrientationState, getScreenSize } from "./utils/dom.utils.js";
 
 export default class Game extends Component {
   version = 0.01;
@@ -32,6 +32,7 @@ export default class Game extends Component {
     super({ parent: rootEl });
 
     this.setStyle(`
+      position: relative;
       height: 100%;
       width: min-content;
       display: flex;
@@ -56,8 +57,9 @@ export default class Game extends Component {
     super.render();
 
     const { width, height } = getScreenSize();
+    const portrait = getPortraitOrientationState();
 
-    this.addStyle('min-width', `${width}px`);
+    this.addStyle('min-width', portrait ? '100vw' : `${width}px`);
 
     const targetScreen = this.activeScreen;
 

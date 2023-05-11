@@ -23,6 +23,8 @@ export default class LandingScreen extends ScreenComponent {
 
     this.append(
       new Component({
+        style: `margin: 0 auto;
+        width: fit-content;`,
         children: [
           new Component({
             style:
@@ -46,6 +48,7 @@ export default class LandingScreen extends ScreenComponent {
         style: `
           padding: 0 1em;
           margin: 0 auto;
+          width: fit-content;
         `,
         children: [
           new Component({
@@ -61,7 +64,9 @@ export default class LandingScreen extends ScreenComponent {
             observer: () => {
               const startTime = WORKING_HOURS[0];
 
-              return this.isOpen ? "tap to play" : `come back at ${startTime}${startTime < 12 ? 'AM' : 'PM'}`
+              return this.isOpen
+                ? "tap to play"
+                : `come back at ${startTime}${startTime < 12 ? "AM" : "PM"}`;
             },
           }),
         ],

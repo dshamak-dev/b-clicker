@@ -37,6 +37,7 @@ export default class GameScreen extends ScreenComponent {
         style: `
         display: grid;
         grid-template-rows: auto 1fr;
+        justify-content: center;
         height: 100%;
         background-color: #d9d9d9;
       `.trim(),
