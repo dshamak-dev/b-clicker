@@ -3,9 +3,9 @@ import { createGame, getGame } from "./src/scripts/game.manager.js";
 (() => {
   createGame();
 
-  window.addEventListener("keydown", (e) => {
-    const game = getGame();
+  const game = getGame();
 
+  window.addEventListener("keydown", (e) => {
     switch (e.key) {
       case "d": {
         window.debug = !window.debug;
@@ -18,4 +18,7 @@ import { createGame, getGame } from "./src/scripts/game.manager.js";
       }
     }
   });
+  window.addEventListener('dblclick', () => {
+    game.start();
+  })
 })();

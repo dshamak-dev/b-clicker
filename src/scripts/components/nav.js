@@ -31,7 +31,7 @@ export default class Nav extends Component {
             background-color: black;
             border-radius: 0.4em 0 0.4em 0;
             display: flex;
-            gap: 4px;
+            gap: 2px;
             flex-direction: column;
             text-align: center;
             justify-content: center;

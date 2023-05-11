@@ -48,7 +48,7 @@ export default class ScreenComponent extends Component {
     this.el.classList.toggle("visible", this.visible);
     this.el.style.setProperty(
       "--root-width",
-      `min(${this.screenWidth}px, 100vw)`
+      `max(min(${this.screenWidth}px, 100vw), fit-content)`
     );
     this.el.style.display = this.visible ? this.displayType : "none";
     this.el.style.position = isOverlayScreen ? "absolute" : "relative";
