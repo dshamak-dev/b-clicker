@@ -7,7 +7,7 @@ export const getStoreOpenState = () => {
   const hours = now.getHours();
   const [from, to] = WORKING_HOURS;
 
-  return mockDay;
+  // return mockDay;
 
   return from <= hours && hours < to;
 };
