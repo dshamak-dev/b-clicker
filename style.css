@@ -1,0 +1,24 @@
+html,
+body {
+  margin: 0;
+}
+
+body {
+  min-height: 100vh;
+  background-color: #e1e1e1;
+}
+
+body * {
+  box-sizing: border-box;
+}
+
+main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.pointer {
+  cursor: pointer;
+}
