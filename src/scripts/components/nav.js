@@ -18,11 +18,11 @@ export default class Nav extends Component {
     );
 
     const infoBtn = new GameComponent({
-      parentEl: this.el,
+      parent: this.el,
     });
 
     const menuBtn = this.menuBtn = new GameComponent({
-      parentEl: this.el,
+      parent: this.el,
       className: "menu-btn pointer",
       style: `
             width: 1em;
@@ -40,7 +40,7 @@ export default class Nav extends Component {
     });
     menuBtn.el.onclick = this.handleToggleMenu.bind(this);
 
-    this.children = [infoBtn, menuBtn];
+    this.append(infoBtn, menuBtn);
   }
 
   handleToggleMenu(e) {

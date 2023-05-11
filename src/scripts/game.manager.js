@@ -1,7 +1,11 @@
 import Game from "./game.js";
 
-export let game = null;
+let game = null;
 
 export const createGame = () => {
   game = new Game();
+};
+
+export const getGame = () => {
+  return game;
 };

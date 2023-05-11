@@ -5,8 +5,7 @@ const MIN_SCREEN_WIDTH = 375;
 const FULLSCREEN_WIDTH_BREAKPOINT = 720;
 const SCREEN_WIDTH_PROPOTIONS = 1 / 3;
 
-export default class Screen extends Component {
-  displayType = "block";
+export default class ScreenComponent extends Component {
   layer = 1;
   visible = false;
   nav;
@@ -25,12 +24,11 @@ export default class Screen extends Component {
     return Math.max(targetWidth, MIN_SCREEN_WIDTH);
   }
 
-  constructor(props = { layer: 0 }) {
-    super(props);
+  constructor(props) {
+    super(Object.assign({ layer: 0, displayType: 'block' }, props));
 
     this.layer = props?.layer || 0;
 
-    this.el.classList.add("game_screen");
     this.el.setAttribute(
       "style",
       `
@@ -42,10 +40,11 @@ export default class Screen extends Component {
         background-color: #D9D9D9;
         z-index: ${this.layer || 0};
         overflow: hidden;
+        ${this.style || ''},
       `
     );
 
-    // this.nav = new Nav({ parentEl: this.el });
+    // this.nav = new Nav({ parent: this.el });
 
     // this.append(this.nav);
 
@@ -88,13 +87,11 @@ export default class Screen extends Component {
     this.visible = true;
 
     this.update();
-    // this.render();
   }
 
   hide() {
     this.visible = false;
 
     this.update();
-    // this.render();
   }
 }
