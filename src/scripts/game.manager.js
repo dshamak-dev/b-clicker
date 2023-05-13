@@ -3,7 +3,7 @@ import Game from "./game.js";
 let game = null;
 
 export const createGame = () => {
-  game = new Game();
+  return game = new Game();
 };
 
 export const getGame = () => {

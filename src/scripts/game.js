@@ -39,14 +39,23 @@ export default class Game extends Component {
       justify-content: center;
     `);
 
+    window.addEventListener("resize", this.render.bind(this));
+
+    this.init();
+  }
+
+  init() {
     this.screens = [
       new LandingScreen({ parent: this.el }),
       new GameScreen({ parent: this.el }),
     ];
 
-    window.addEventListener("resize", this.render.bind(this));
+    this.update();
+  }
 
-    this.render();
+  start() {
+    this.screens[1].show();
+    this.screens[0].hide();
   }
 
   update() {
@@ -68,10 +77,5 @@ export default class Game extends Component {
     }
 
     targetScreen?.render();
-  }
-
-  start() {
-    this.screens[1].show();
-    this.screens[0].hide();
   }
 }

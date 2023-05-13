@@ -1,21 +1,42 @@
 import { createGame, getGame } from "./src/scripts/game.manager.js";
 
 (() => {
-  createGame();
+  const game = createGame();
 
-  const game = getGame();
+  window.debug = {
+    collision: false,
+    grid: false,
+  };
+
+  const toggleState = (key) => {
+    window.debug[key] = !window.debug[key];
+    game.render();
+  };
 
   window.addEventListener("keydown", (e) => {
+    let key = null;
+
     switch (e.key) {
-      case "d": {
-        window.debug = !window.debug;
-        game.render();
+      case "g": {
+        key = 'grid';
+        break;
+      }
+      case "c": {
+        key = 'collision';
+        break;
+      }
+      case "s": {
+        key = 'seats';
         break;
       }
       case 'p': {
         game.start();
         break;
       }
+    }
+
+    if (key != null) {
+      toggleState(key);
     }
   });
   window.addEventListener('dblclick', () => {

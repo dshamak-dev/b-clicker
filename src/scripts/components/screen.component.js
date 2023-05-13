@@ -1,6 +1,5 @@
 import { getPortraitOrientationState, getScreenWidth } from "../utils/dom.utils.js";
 import Component from "./component.js";
-import Nav from "./nav.js";
 
 export default class ScreenComponent extends Component {
   layer = 1;
@@ -53,18 +52,6 @@ export default class ScreenComponent extends Component {
     );
     this.el.style.display = this.visible ? this.displayType : "none";
     this.el.style.position = "absolute";
-
-    // const hasNav = this.children.find(c => c === _self.nav);
-
-    // if (this.nav != null && !hasNav) {
-    //   this.children.unshift(this.nav);
-    // }
-
-    // if (this.nav?.el != null) {
-    //   this.el.style.paddingTop = `${
-    //     this.nav.el.getBoundingClientRect().height
-    //   }px`;
-    // }
   }
 
   show() {

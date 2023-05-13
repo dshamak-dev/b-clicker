@@ -7,7 +7,7 @@ export default class Nav extends Component {
       Object.assign({}, props, {
         id: 'nav',
         style: `
-          position: response;
+          position: relative;
           top: 0;
           left: 0;
           display: flex;
@@ -52,12 +52,19 @@ export default class Nav extends Component {
   handleToggleMenu(e) {
     const game = getGame();
     const landingScreen = game.screens[0];
+    const gameScreen = game.screens[1];
 
     if (landingScreen == null) {
       return;
     }
 
-    landingScreen.visible ? landingScreen.hide() : landingScreen.show();
+    if(landingScreen.visible) {
+      landingScreen.hide();
+      gameScreen?.show();
+    } else {
+      landingScreen.show();
+      gameScreen?.hide();
+    }
   }
 
   render() {

@@ -1,3 +1,4 @@
+import GameTime from "../models/game.time.js";
 import { getScreenContentSize } from "../utils/dom.utils.js";
 
 export default class Component {
@@ -9,6 +10,7 @@ export default class Component {
   style;
   fitForn;
   _children = [];
+  time;
 
   get children() {
     return this._children.slice();
@@ -20,6 +22,8 @@ export default class Component {
 
   constructor({ children = [], ...props } = { children: [] }) {
     Object.assign(this, { fitFont: false, }, props);
+
+    this.time = new GameTime();
 
     this.el = document.createElement(this.tagType);
 
@@ -41,6 +45,8 @@ export default class Component {
   }
 
   update() {
+    this.time.update();
+
     this.children?.forEach((it) => it.update());
 
     this.render();

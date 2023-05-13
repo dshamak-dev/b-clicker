@@ -11,3 +11,20 @@ export const getStoreOpenState = () => {
 
   return from <= hours && hours < to;
 };
+
+export const createThreshold = (delay = 500) => {
+  let lastCallTime = Date.now();
+
+  return (callback) => {
+    const now = Date.now();
+    const passed = now - lastCallTime;
+
+    if (passed < delay) {
+      return;
+    }
+
+    lastCallTime = now;
+
+    callback();
+  };
+};
