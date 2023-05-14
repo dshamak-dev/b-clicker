@@ -69,3 +69,17 @@ export const getAdjacentIndexByDirection = (
 
   return nextIndex;
 };
+
+export const getCollisionInArea = (pointX, pointY, { x, y, width, height }) => {
+  let inX = pointX >= x && pointX <= x + width;
+  let inY = pointY >= y && pointY <= y + height;
+
+  return inX && inY;
+};
+
+export const positionToLocation = ({ col, row }, cellSize) => {
+  return {
+    x: col * cellSize,
+    y: row * cellSize,
+  }
+};

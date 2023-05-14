@@ -1,10 +1,12 @@
+import { clampValue } from "../utils/data.utils.js";
+
 export default class GameTime {
   startAt;
   lastUpdatedAt;
   updateRate;
 
   get delta() {
-    return this.updateRate / 1000;
+    return clampValue(this.updateRate / 1000, 1);
   }
   
   constructor() {

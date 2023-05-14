@@ -1,7 +1,7 @@
 export const WORKING_HOURS = [10, 20];
-export const TARGET_FPS = 15;
+export const TARGET_FPS = 30;
 
-export const CHARATER_TYPES = {
+export const CHARACTER_TYPES = {
   UNKNOWN: 0,
   HUMAN: 1,
   DOG: 2,

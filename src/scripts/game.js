@@ -26,6 +26,10 @@ export default class Game extends Component {
     return this.screens.find((s) => s.visible) || this.screens[0];
   }
 
+  get map() {
+    return this.screens[1].map;
+  }
+
   constructor() {
     const rootEl = document.getElementById('root');
 

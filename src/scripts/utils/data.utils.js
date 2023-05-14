@@ -19,3 +19,23 @@ export const formatNumberOutput = (value = 0, minCharsNum = 1) => {
 
   return [...new Array(charsToAdd).fill(0), value].join("");
 };
+
+export const isEqual = (a, b) => {
+  return JSON.stringify(a) === JSON.stringify(b);
+};
+
+export const clampValue = (value, absMaxValue) => {
+  if (value > 0) {
+    return Math.min(value, absMaxValue);
+  }
+
+  return Math.max(value, absMaxValue * -1);
+};
+
+export const toFixed = (num, dec) => {
+  if (!num || !dec) {
+    return num;
+  }
+
+  return Number(num.toFixed(dec));
+};

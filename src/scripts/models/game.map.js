@@ -1,10 +1,18 @@
+import { CHARACTER_TYPES } from "../../constants/game.const.js";
 import { MAP_CONFIG } from "../../constants/map.const.js";
 import Canvas from "../components/canvas.js";
 import Component from "../components/component.js";
 import { getGame } from "../game.manager.js";
 import { getRandomArrayItem } from "../utils/array.utils.js";
+import { getCharacterTypeIdByLabel } from "../utils/character.utils.js";
+import { getRandom } from "../utils/common.utils.js";
+import { isEqual } from "../utils/data.utils.js";
+import { getCollisionInArea, positionToLocation } from "../utils/grid.utils.js";
 import { getCurrentTheme } from "../utils/theme.utils.js";
+import { createThreshold } from "../utils/time.utils.js";
 import Character from "./character.js";
+
+const SPAWN_DELAY = 5 * 1000;
 
 export default class GameMap extends Component {
   size;
@@ -12,6 +20,7 @@ export default class GameMap extends Component {
   // parts
   characters = [];
   canvasEl;
+  spawnThreshold;
 
   get screen() {
     return this?.game?.screens[1];
@@ -47,7 +56,10 @@ export default class GameMap extends Component {
   }
 
   constructor(props) {
-    super(Object.assign({ className: 'game-map' }, props));
+    super(Object.assign({ className: "game-map" }, props));
+
+    this.spawnThreshold = createThreshold(SPAWN_DELAY);
+    this.nextSpawnDelay = getRandom(SPAWN_DELAY, SPAWN_DELAY * 2);
 
     this.config = Object.assign({}, MAP_CONFIG);
 
@@ -59,6 +71,18 @@ export default class GameMap extends Component {
     });
     this.bg.el.setAttribute("src", "./src/assets/layers.png");
 
+    this.charactersSprite = new Component({
+      tagType: "img",
+      className: "pointer-none",
+      id: 'characters-sprite',
+      style:
+        "position: absolute; display: none; opacity: 0;",
+    });
+    this.charactersSprite.el.setAttribute("src", "./src/assets/characters.sprite.png");
+    this.charactersSprite.el.addEventListener("load", () => {
+      console.log("sprites loaded");
+    });
+
     this.bg.el.addEventListener("load", () => {
       console.log("image loaded");
     });
@@ -67,7 +91,9 @@ export default class GameMap extends Component {
       style: `margin: 0 auto; height: 100%;`,
     });
 
-    this.append(this.bg, this.canvasEl);
+    this.canvas.el.onclick = this.onMapClick.bind(this);
+
+    this.append(this.bg, this.charactersSprite, this.canvasEl);
 
     const self = this;
 
@@ -97,6 +123,8 @@ export default class GameMap extends Component {
     this.characters?.forEach((c) => c.update());
 
     super.update();
+
+    this.spawnThreshold(this.spawnCharacter.bind(this), this.nextSpawnDelay);
   }
 
   render() {
@@ -121,6 +149,13 @@ export default class GameMap extends Component {
     this.bg.el.setAttribute("width", width);
     this.bg.el.setAttribute("height", height);
 
+
+    const spriteWidth = cellSize * 4;
+    this.charactersSprite.addStyle('width', `${spriteWidth}px`);
+    this.charactersSprite.el.setAttribute("width", spriteWidth);
+    this.charactersSprite.addStyle('height', `${cellSize}px`);
+    this.charactersSprite.el.setAttribute("height", cellSize);
+
     this.canvas.el.setAttribute("width", width);
     this.canvas.el.setAttribute("height", height);
     this.addStyle("--width", `${width}px`);
@@ -142,16 +177,7 @@ export default class GameMap extends Component {
       this.renderSeats();
     }
 
-    this.characters
-      ?.map((c) => {
-        if (c.position.col < 0 || c.position.col > this.gridSize.cols) {
-          c.destroy();
-        }
-
-        return c;
-      })
-      ?.filter((c) => c.active)
-      ?.map((c) => this.renderObject(c.position.col, c.position.row, c.color));
+    this.characters?.filter((c) => c.active)?.forEach((c) => c.render());
 
     if (window.debug?.grid) {
       this.renderDebugGrid();
@@ -159,28 +185,30 @@ export default class GameMap extends Component {
   }
 
   renderObjects() {
-    // const cellSize = this.cellSize;
     const points = this.config?.points?.objects;
 
     if (!points) {
       return;
     }
 
-    points.forEach(({ col, row }) => {
+    points.forEach(({ position: { col, row } }) => {
       this.renderObject(col, row, "red");
     });
   }
 
   renderSeats() {
-    // const cellSize = this.cellSize;
     const points = this.config?.points?.seats;
 
     if (!points) {
       return;
     }
 
-    points.forEach(({ col, row }) => {
+    points.forEach(({ position: { col, row }, characterLabels }) => {
       this.renderObject(col, row, "green");
+
+      if (Array.isArray(characterLabels)) {
+        this.renderText(col, row, characterLabels.toString(), "black");
+      }
     });
   }
 
@@ -196,14 +224,37 @@ export default class GameMap extends Component {
   }
 
   renderObject(col, row, color) {
-    const renderContext = this.renderContext;
     const cellSize = this.cellSize;
 
     const x = col * cellSize;
     const y = row * cellSize;
 
+    this.renderObjectByCoords(x, y, color);
+  }
+
+  renderObjectByCoords(x, y, color) {
+    const renderContext = this.renderContext;
+    const cellSize = this.cellSize;
+
     renderContext.fillStyle = color;
     renderContext.fillRect(x, y, cellSize, cellSize);
+  }
+
+  renderText(col, row, text, color) {
+    const cellSize = this.cellSize;
+
+    const x = col * cellSize;
+    const y = row * cellSize;
+
+    this.renderTextByCoords(x, y, text, color);
+  }
+
+  renderTextByCoords(x, y, text, color) {
+    const renderContext = this.renderContext;
+
+    renderContext.fillStyle = color;
+    renderContext.font = "16px Arial";
+    renderContext.fillText(text, x, y + 16);
   }
 
   renderDebugCell(col, row, cellSize) {
@@ -225,13 +276,28 @@ export default class GameMap extends Component {
   }
 
   spawnCharacter(props) {
+    const type = getRandomArrayItem(Object.values(CHARACTER_TYPES));
     const position = this.getRandomSpawnPosition();
-    const targetPoint = getRandomArrayItem(this.config.points.seats);
+    const targetPoint = this.getSeatPosition(type);
+
+    if (targetPoint == null) {
+      return;
+    }
+
     const character = new Character(
-      Object.assign({ position, path: [targetPoint], color: "purple" }, props)
+      Object.assign(
+        {
+          type,
+          position,
+          path: [{ ...targetPoint, row: 0 }, targetPoint],
+        },
+        props
+      )
     );
 
     this.characters.push(character);
+
+    this.nextSpawnDelay = getRandom(SPAWN_DELAY, SPAWN_DELAY * 2);
   }
 
   getRandomSpawnPosition() {
@@ -241,5 +307,116 @@ export default class GameMap extends Component {
     ]);
 
     return pos;
+  }
+
+  getCharacterAtPosition({ col, row }) {
+    return this.characters.find((c) => isEqual(c.position, { col, row }));
+  }
+
+  getCharacterAtCoords({x, y}) {
+    return this.characters.find((c) => {
+      const res = getCollisionInArea(x, y, {
+        ...c.location,
+        width: c.width,
+        height: c.height,
+      });
+
+      return res;
+    });
+  }
+
+  onMapClick(e) {
+    const target = e.target;
+    const rect = target.getBoundingClientRect();
+
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    // const { row, col, index } = this.getCellIndexByCoords(x, y);
+
+    const character = this.getCharacterAtCoords({ x, y });
+
+    if (!character) {
+      return;
+    }
+
+    character.poke();
+  }
+
+  getCellIndexByCoords(x, y) {
+    const marginTop = 0;
+    const marginLeft = 0;
+    const cellSize = this.cellSize;
+
+    const row = Math.floor((y - marginTop) / cellSize);
+    const col = Math.floor((x - marginLeft) / cellSize);
+
+    let index = row * this.gridSize.cols + col;
+    // let cell = data.cells[index];
+
+    return { row, col, index };
+  }
+
+  getSeatPosition(characterType) {
+    const seatsInfo = this.getEmptySeats({ type: characterType }).sort(
+      (a, b) => {
+        if (a.character != null) {
+          return 1;
+        }
+
+        return a.position.row > b.position.row ? -1 : 1;
+      }
+    );
+
+    if (seatsInfo.length > 0) {
+      return getRandomArrayItem(seatsInfo.slice(0, 10)).position;
+    }
+
+    return null;
+  }
+
+  getSeatPositionForCharacter(character) {
+    const available = this.getEmptySeats(character);
+
+    return available[0];
+  }
+
+  getEmptySeats(targetCharacter) {
+    const self = this;
+
+    const seats = this.config.points.seats;
+    const sorted = seats.reduce((all, { position, characterLabels }) => {
+      const next = all.slice();
+      const character = self.getCharacterAtCoords(positionToLocation(position, this.cellSize));
+      const info = {
+        position,
+        characterLabels,
+        characterTypes: characterLabels?.map((label) =>
+          getCharacterTypeIdByLabel(label)
+        ),
+        character,
+      };
+
+      if (character == null || character.type === CHARACTER_TYPES.DOG) {
+        next.push(info);
+      }
+
+      return next;
+    }, []);
+
+    if (targetCharacter != null) {
+      return sorted.filter(
+        ({ characterTypes }) =>
+          characterTypes == null ||
+          characterTypes.includes(targetCharacter.type)
+      );
+    }
+
+    return sorted;
+  }
+
+  getCellLocation({ col, row }) {
+    const cellSize = this.cellSize;
+
+    return { x: col * cellSize, y: row * cellSize };
   }
 }

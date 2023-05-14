@@ -29,6 +29,10 @@ import { createGame, getGame } from "./src/scripts/game.manager.js";
         key = 'seats';
         break;
       }
+      case "i": {
+        key = 'charInfo';
+        break;
+      }
       case 'p': {
         game.start();
         break;

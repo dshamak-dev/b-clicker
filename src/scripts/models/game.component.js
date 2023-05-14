@@ -1,17 +1,21 @@
+import { generateId, toFixed } from "../utils/data.utils.js";
+
 export default class GameComponent {
+  id;
+
   _position = { col: 0, row: 0, layer: 0 };
   size = { width: 0, height: 0 };
-  material = { color: 'transparent', img: null };
+  material = { color: "transparent", img: null };
 
   get position() {
     return Object.assign({
       col: Math.floor(this._position.col) || 0,
       row: Math.floor(this._position.row) || 0,
-    })
+    });
   }
 
   set position({ col, row }) {
-    this._position = { col, row };
+    this._position = { col: toFixed(col, 5), row: toFixed(row, 5) };
   }
 
   get center() {
@@ -22,6 +26,8 @@ export default class GameComponent {
   }
 
   constructor(props) {
-    Object.assign(this, props);
+    Object.assign(this, { 
+      id: generateId(4),
+     }, props);
   }
 }

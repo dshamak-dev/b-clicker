@@ -1,6 +1,6 @@
 import { WORKING_HOURS } from "../../constants/game.const.js";
 
-const mockDay = true;//Math.random() > 0.5;
+const mockDay = false;//Math.random() > 0.5;
 
 export const getStoreOpenState = () => {
   const now = new Date();
@@ -12,10 +12,11 @@ export const getStoreOpenState = () => {
   return from <= hours && hours < to;
 };
 
-export const createThreshold = (delay = 500) => {
+export const createThreshold = (baseDelay = 500) => {
   let lastCallTime = Date.now();
 
-  return (callback) => {
+  return (callback, dynamicDelay) => {
+    const delay = dynamicDelay != null ? dynamicDelay : baseDelay;
     const now = Date.now();
     const passed = now - lastCallTime;
 

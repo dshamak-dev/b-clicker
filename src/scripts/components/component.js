@@ -67,7 +67,7 @@ export default class Component {
   }
 
   render() {
-    const parent = this.el.parent;
+    const parent = this.el.parentElement;
 
     if (this.observer) {
       this.el.innerHTML = this.observer();
