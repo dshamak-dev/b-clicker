@@ -24,6 +24,14 @@ main {
   height: 100vh;
 }
 
+[frame-rate]:before {
+  content: attr(frame-rate);
+  position: fixed;
+  top: 6px;
+  left: 6px;
+  color: lime;
+}
+
 .pointer {
   cursor: pointer;
 }

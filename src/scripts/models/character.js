@@ -452,22 +452,6 @@ export default class Character extends GameComponent {
   render() {
     const { x, y } = this.location;
     const center = this.center;
-    let info = `${this.health}`;
-
-    switch (this.type) {
-      case CHARACTER_TYPES.DOG: {
-        break;
-      }
-      default: {
-        if (window.debug?.charInfo) {
-          info = `${info}/${this.money}/${this.timeLeft}`;
-        }
-
-        break;
-      }
-    }
-
-    // this.map.renderObjectByCoords(x, y, this.color);
 
     const renderContext = this.map.renderContext;
 
@@ -501,6 +485,50 @@ export default class Character extends GameComponent {
 
     renderContext.restore();
 
-    this.map.renderTextByCoords(x, y, info, "black");
+    this.renderInfo();
+  }
+
+  renderInfo() {
+    const { x, y } = this.location;
+    const renderContext = this.map.renderContext;
+    let info = `${this.health}`;
+
+    switch (this.type) {
+      case CHARACTER_TYPES.DOG: {
+        break;
+      }
+      default: {
+        if (window.debug?.charInfo) {
+          info = `${info}/${this.money}/${this.timeLeft}`;
+        }
+
+        break;
+      }
+    }
+
+    const size = this.height * 0.4;
+
+    const point = {
+      x: x + this.width - size / 4,
+      y: y + size / 4,
+    };
+
+    renderContext.save();
+    renderContext.beginPath();
+    renderContext.strokeStyle = "black";
+    renderContext.fillStyle = "white";
+    renderContext.arc(point.x, point.y, size / 2, 0, Math.PI * 2, false);
+    renderContext.stroke();
+    renderContext.fill();
+    renderContext.clip();
+    renderContext.restore();
+
+    this.map.renderTextByCoords(
+      point.x - size / 4,
+      point.y - size,
+      info,
+      "black",
+      size
+    );
   }
 }

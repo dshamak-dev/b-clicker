@@ -72,6 +72,15 @@ export default class Game extends Component {
     const { width, height } = getScreenSize();
     const portrait = getPortraitOrientationState();
 
+    if (portrait) {
+      this.addStyle("--root-width", "100vw");
+    } else {
+      this.addStyle(
+        "--root-width",
+        `max(min(${this.screenWidth}px, 100vw), fit-content)`
+      );
+    }
+
     this.addStyle('min-width', portrait ? '100vw' : `${width}px`);
 
     const targetScreen = this.activeScreen;

@@ -56,7 +56,18 @@ export default class GameMap extends Component {
   }
 
   constructor(props) {
-    super(Object.assign({ className: "game-map" }, props));
+    super(
+      Object.assign(
+        {
+          className: "game-map",
+          displayType: "flex",
+        },
+        props,
+        {
+          style: `${props.style || ''} align-items: end; background-color: black;`,
+        }
+      )
+    );
 
     this.spawnThreshold = createThreshold(SPAWN_DELAY);
     this.nextSpawnDelay = getRandom(SPAWN_DELAY, SPAWN_DELAY * 2);
@@ -74,11 +85,13 @@ export default class GameMap extends Component {
     this.charactersSprite = new Component({
       tagType: "img",
       className: "pointer-none",
-      id: 'characters-sprite',
-      style:
-        "position: absolute; display: none; opacity: 0;",
+      id: "characters-sprite",
+      style: "position: absolute; display: none; opacity: 0;",
     });
-    this.charactersSprite.el.setAttribute("src", "./src/assets/characters.sprite.png");
+    this.charactersSprite.el.setAttribute(
+      "src",
+      "./src/assets/characters.sprite.png"
+    );
     this.charactersSprite.el.addEventListener("load", () => {
       console.log("sprites loaded");
     });
@@ -149,11 +162,10 @@ export default class GameMap extends Component {
     this.bg.el.setAttribute("width", width);
     this.bg.el.setAttribute("height", height);
 
-
     const spriteWidth = cellSize * 4;
-    this.charactersSprite.addStyle('width', `${spriteWidth}px`);
+    this.charactersSprite.addStyle("width", `${spriteWidth}px`);
     this.charactersSprite.el.setAttribute("width", spriteWidth);
-    this.charactersSprite.addStyle('height', `${cellSize}px`);
+    this.charactersSprite.addStyle("height", `${cellSize}px`);
     this.charactersSprite.el.setAttribute("height", cellSize);
 
     this.canvas.el.setAttribute("width", width);
@@ -240,20 +252,20 @@ export default class GameMap extends Component {
     renderContext.fillRect(x, y, cellSize, cellSize);
   }
 
-  renderText(col, row, text, color) {
+  renderText(col, row, text, color, fontSize) {
     const cellSize = this.cellSize;
 
     const x = col * cellSize;
     const y = row * cellSize;
 
-    this.renderTextByCoords(x, y, text, color);
+    this.renderTextByCoords(x, y, text, color, fontSize);
   }
 
-  renderTextByCoords(x, y, text, color) {
+  renderTextByCoords(x, y, text, color, fontSize = 16) {
     const renderContext = this.renderContext;
 
     renderContext.fillStyle = color;
-    renderContext.font = "16px Arial";
+    renderContext.font = `${fontSize}px Arial`;
     renderContext.fillText(text, x, y + 16);
   }
 
@@ -313,7 +325,7 @@ export default class GameMap extends Component {
     return this.characters.find((c) => isEqual(c.position, { col, row }));
   }
 
-  getCharacterAtCoords({x, y}) {
+  getCharacterAtCoords({ x, y }) {
     return this.characters.find((c) => {
       const res = getCollisionInArea(x, y, {
         ...c.location,
@@ -386,7 +398,9 @@ export default class GameMap extends Component {
     const seats = this.config.points.seats;
     const sorted = seats.reduce((all, { position, characterLabels }) => {
       const next = all.slice();
-      const character = self.getCharacterAtCoords(positionToLocation(position, this.cellSize));
+      const character = self.getCharacterAtCoords(
+        positionToLocation(position, this.cellSize)
+      );
       const info = {
         position,
         characterLabels,

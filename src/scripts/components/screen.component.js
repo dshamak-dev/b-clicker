@@ -1,4 +1,7 @@
-import { getPortraitOrientationState, getScreenWidth } from "../utils/dom.utils.js";
+import {
+  getPortraitOrientationState,
+  getScreenWidth,
+} from "../utils/dom.utils.js";
 import Component from "./component.js";
 
 export default class ScreenComponent extends Component {
@@ -24,6 +27,7 @@ export default class ScreenComponent extends Component {
         width: var(--root-width);
         min-width: 100%;
         height: var(--root-height);
+        height: 100dvh;
         background-color: #D9D9D9;
         z-index: ${this.layer || 0};
         overflow: hidden;
@@ -42,14 +46,7 @@ export default class ScreenComponent extends Component {
   render() {
     super.render();
 
-    const _self = this;
-    const isPortrait = getPortraitOrientationState();
-
     this.el.classList.toggle("visible", this.visible);
-    this.el.style.setProperty(
-      "--root-width",
-      isPortrait ? 'width: 100vw; height: 100vh; height: 100dvh;' :`max(min(${this.screenWidth}px, 100vw), fit-content)`
-    );
     this.el.style.display = this.visible ? this.displayType : "none";
     this.el.style.position = "absolute";
   }

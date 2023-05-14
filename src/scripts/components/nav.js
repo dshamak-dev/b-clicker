@@ -27,11 +27,11 @@ export default class Nav extends Component {
       className: "menu-btn pointer",
       style: `
             width: 1em;
-            height: 1em;
+            height: 1.3em;
             background-color: black;
             border-radius: 0.4em 0 0.4em 0;
             display: flex;
-            gap: 2px;
+            gap: 3px;
             flex-direction: column;
             text-align: center;
             justify-content: center;

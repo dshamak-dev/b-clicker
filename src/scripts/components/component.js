@@ -5,6 +5,7 @@ export default class Component {
   el = null;
   parent = null;
   tagType = "div";
+  displayType;
   observer;
   className;
   style;
@@ -21,14 +22,14 @@ export default class Component {
   }
 
   constructor({ children = [], ...props } = { children: [] }) {
-    Object.assign(this, { fitFont: false, }, props);
+    Object.assign(this, { fitFont: false }, props);
 
     this.time = new GameTime();
 
     this.el = document.createElement(this.tagType);
 
     if (this.id != null) {
-      this.el.setAttribute('id', this.id);
+      this.el.setAttribute("id", this.id);
     }
 
     this.append(...children);
@@ -86,6 +87,10 @@ export default class Component {
         "font-size",
         `max(1em, calc(${this.rect.width}px / ${text.length * 0.8}))`
       );
+    }
+
+    if (this.displayType) {
+      this.addStyle("display", this.displayType);
     }
 
     this.children?.forEach((it) => it.render());
