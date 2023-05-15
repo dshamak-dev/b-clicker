@@ -9,7 +9,7 @@ import { getRandom } from "../utils/common.utils.js";
 import { isEqual } from "../utils/data.utils.js";
 import { getCollisionInArea, positionToLocation } from "../utils/grid.utils.js";
 import { getCurrentTheme } from "../utils/theme.utils.js";
-import { createThreshold } from "../utils/time.utils.js";
+import { createThreshold, getStoreOpenState } from "../utils/time.utils.js";
 import Character from "./character.js";
 
 const SPAWN_DELAY = 5 * 1000;
@@ -21,6 +21,7 @@ export default class GameMap extends Component {
   characters = [];
   canvasEl;
   spawnThreshold;
+  allowEnter = false;
 
   get screen() {
     return this?.game?.screens[1];
@@ -116,7 +117,9 @@ export default class GameMap extends Component {
     this.layers = [];
     // this.characters = (characters || []).map((d) => new Character(d));
 
-    this.openDoors();
+    if (getStoreOpenState()) {
+      this.openDoors();
+    }
 
     window.addEventListener("keydown", (e) => {
       if (!self.active) {
@@ -163,6 +166,8 @@ export default class GameMap extends Component {
     }
 
     const theme = getCurrentTheme();
+
+    this.addStyle("filter", `grayscale(${this.allowEnter ? 0 : 1})`);
 
     const cellSize = this.cellSize;
     const { cols, rows } = this.gridSize;
@@ -352,18 +357,44 @@ export default class GameMap extends Component {
   onMapClick(e) {
     const target = e.target;
     const rect = target.getBoundingClientRect();
+    const cellSize = this.cellSize;
 
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     // const { row, col, index } = this.getCellIndexByCoords(x, y);
 
-    const character = this.getCharacterAtCoords({ x, y });
+    const characters = this.getAllAtLocation({ x, y });
 
-    if (!character) {
-      return;
+    const doorOnPos = this.config.points.doors.find(({ position }) => {
+      const location = positionToLocation(position, cellSize);
+
+      return getCollisionInArea(x, y, {
+        x: location.x,
+        y: location.y,
+        width: cellSize,
+        height: cellSize,
+      });
+    });
+
+    if (doorOnPos) {
+      this[this.allowEnter ? "closeDoors" : "openDoors"]();
     }
 
-    character.poke();
+    if (characters) {
+      characters.forEach((character) => character.poke());
+    }
+  }
+
+  getAllAtLocation({ x, y }) {
+    return this.characters?.filter((c) => {
+      const res = getCollisionInArea(x, y, {
+        ...c.location,
+        width: c.width,
+        height: c.height,
+      });
+
+      return res;
+    }) || [];
   }
 
   getCellIndexByCoords(x, y) {

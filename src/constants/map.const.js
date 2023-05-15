@@ -34,9 +34,9 @@ export const MAP_CONFIG = {
       { position: { col: 5, row: 11 } },
     ],
     doors: [
-      { position: { col: 4, row: 4 } },
-      { position: { col: 5, row: 4 } },
-      { position: { col: 7, row: 18 } },
+      { position: { col: 4, row: 3 } },
+      { position: { col: 5, row: 3 } },
+      // { position: { col: 7, row: 18 } },
     ],
     objects: [
       { position: { col: 1, row: 6 } },

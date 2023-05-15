@@ -77,9 +77,9 @@ export default class LandingScreen extends ScreenComponent {
   }
 
   handleClick() {
-    if (!this.isOpen) {
-      return;
-    }
+    // if (!this.isOpen) {
+    //   return;
+    // }
 
     getGame()?.start();
   }
