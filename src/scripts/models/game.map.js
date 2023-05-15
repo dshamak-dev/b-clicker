@@ -64,7 +64,9 @@ export default class GameMap extends Component {
         },
         props,
         {
-          style: `${props.style || ''} align-items: end; background-color: black;`,
+          style: `${
+            props.style || ""
+          } align-items: end; background-color: black;`,
         }
       )
     );

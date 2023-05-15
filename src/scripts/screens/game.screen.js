@@ -3,6 +3,7 @@ import Component from "../components/component.js";
 import Nav from "../components/nav.js";
 import ScreenComponent from "../components/screen.component.js";
 import GameMap from "../models/game.map.js";
+import GameTime from "../models/game.time.js";
 import { createThreshold } from "../utils/time.utils.js";
 
 export default class GameScreen extends ScreenComponent {
@@ -15,6 +16,8 @@ export default class GameScreen extends ScreenComponent {
         className: "game-screen select-none",
       })
     );
+
+    this.animationTime = new GameTime();
 
     this.nav = new Nav();
 
@@ -80,9 +83,14 @@ export default class GameScreen extends ScreenComponent {
   }
 
   tick() {
-    this.threshold(this.map.update.bind(this.map));
+    const self = this;
 
-    this.el.setAttribute("frame-rate", this.time.updateRate);
+    this.time.update();
+
+    this.threshold(() => {
+      self.map.update();
+      self.el.setAttribute("frame-rate", this.time.fps);
+    });
 
     if (this.visible) {
       window.requestAnimationFrame(this.tick.bind(this));
