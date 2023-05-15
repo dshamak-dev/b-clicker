@@ -25,7 +25,9 @@ export default class GameTime {
     this.lastUpdatedAt = now;
 
     this.threshold(() => {
-      self.fps = self.updateRate > 200 ? 0 : self.updateRate;
+      const fps = Math.floor(1000 / self.updateRate);
+
+      self.fps = fps;
     });
   }
 }

@@ -3,7 +3,7 @@ import Component from "../components/component.js";
 import Nav from "../components/nav.js";
 import ScreenComponent from "../components/screen.component.js";
 import GameMap from "../models/game.map.js";
-import GameTime from "../models/game.time.js";
+import Timer from "../models/timer.js";
 import { createThreshold } from "../utils/time.utils.js";
 
 export default class GameScreen extends ScreenComponent {
@@ -17,7 +17,7 @@ export default class GameScreen extends ScreenComponent {
       })
     );
 
-    this.animationTime = new GameTime();
+    this.animationTimer = new Timer();
 
     this.nav = new Nav();
 
@@ -44,6 +44,7 @@ export default class GameScreen extends ScreenComponent {
   show() {
     super.show();
 
+    // this.animationTimer.start(this.tick.bind(this), 1000 / TARGET_FPS);
     this.tick();
 
     if (navigator.wakeLock !== null) {
@@ -63,6 +64,8 @@ export default class GameScreen extends ScreenComponent {
 
   hide() {
     super.hide();
+
+    this.animationTimer.stop();
 
     const self = this;
 
@@ -89,6 +92,7 @@ export default class GameScreen extends ScreenComponent {
 
     this.threshold(() => {
       self.map.update();
+
       self.el.setAttribute("frame-rate", this.time.fps);
     });
 

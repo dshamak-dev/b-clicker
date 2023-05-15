@@ -116,6 +116,8 @@ export default class GameMap extends Component {
     this.layers = [];
     // this.characters = (characters || []).map((d) => new Character(d));
 
+    this.openDoors();
+
     window.addEventListener("keydown", (e) => {
       if (!self.active) {
         return;
@@ -124,6 +126,14 @@ export default class GameMap extends Component {
       switch (e.key) {
         case "1": {
           self.spawnCharacter();
+          break;
+        }
+        case "2": {
+          if (this.allowEnter) {
+            self.closeDoors();
+          } else {
+            self.openDoors();
+          }
           break;
         }
       }
@@ -315,10 +325,10 @@ export default class GameMap extends Component {
   }
 
   getRandomSpawnPosition() {
-    const pos = getRandomArrayItem([
-      { col: 0, row: 0 },
-      { col: this.gridSize.col, y: 0 },
-    ]);
+    const positions = new Array(this.gridSize.col).fill(null).map((_, i) => {
+      return { col: 1, row: -1 };
+    });
+    const pos = getRandomArrayItem(positions);
 
     return pos;
   }
@@ -371,6 +381,10 @@ export default class GameMap extends Component {
   }
 
   getSeatPosition(characterType) {
+    if (!this.allowEnter) {
+      return null;
+    }
+
     const seatsInfo = this.getEmptySeats({ type: characterType }).sort(
       (a, b) => {
         if (a.character != null) {
@@ -434,5 +448,13 @@ export default class GameMap extends Component {
     const cellSize = this.cellSize;
 
     return { x: col * cellSize, y: row * cellSize };
+  }
+
+  openDoors() {
+    this.allowEnter = true;
+  }
+
+  closeDoors() {
+    this.allowEnter = false;
   }
 }

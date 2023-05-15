@@ -5,10 +5,10 @@ export const MAP_CONFIG = {
   size: { cols: COLS, rows: ROWS },
   points: {
     seats: [
-      { position: { col: 2, row: 1 } },
-      { position: { col: 7, row: 1 } },
-      { position: { col: 1, row: 2 } },
-      { position: { col: 8, row: 2 } },
+      // { position: { col: 2, row: 1 } },
+      // { position: { col: 7, row: 1 } },
+      // { position: { col: 1, row: 2 } },
+      // { position: { col: 8, row: 2 } },
       { position: { col: 6, row: 5 } },
       { position: { col: 8, row: 5 } },
       { position: { col: 3, row: 6 } },

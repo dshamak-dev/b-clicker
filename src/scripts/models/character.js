@@ -251,7 +251,10 @@ export default class Character extends GameComponent {
 
   leave() {
     this.leaving = true;
-    this.path = this.path.slice(0, 1);
+
+    const { col, row } = this.position;
+
+    this.path = [{ col, row: -1 }];
     this._seatPoint = null;
   }
 
@@ -376,6 +379,10 @@ export default class Character extends GameComponent {
       x: cellLocation.x - currectLocation.x,
       y: cellLocation.y - currectLocation.y,
     };
+
+    if (!direction.x && !direction.y) {
+      return this._position;
+    }
 
     const step = {
       x: clampValue(direction.x, 1),
@@ -525,7 +532,7 @@ export default class Character extends GameComponent {
 
     this.map.renderTextByCoords(
       point.x - size / 4,
-      point.y - size,
+      point.y - size / 2,
       info,
       "black",
       size

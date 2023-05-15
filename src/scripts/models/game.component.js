@@ -1,7 +1,9 @@
 import { generateId, toFixed } from "../utils/data.utils.js";
+import Sprite from "./sprite.js";
 
 export default class GameComponent {
   id;
+  sprite;
 
   _position = { col: 0, row: 0, layer: 0 };
   size = { width: 0, height: 0 };
@@ -25,9 +27,19 @@ export default class GameComponent {
     return { x, y };
   }
 
-  constructor(props) {
-    Object.assign(this, { 
-      id: generateId(4),
-     }, props);
+  constructor({ sprite, position, ...props }) {
+    Object.assign(
+      this,
+      {
+        id: generateId(4),
+      },
+      props
+    );
+
+    this.position = position || { col: 0, row: 0 };
+
+    if (sprite) {
+      this.sprite = new Sprite(sprite);
+    }
   }
 }
