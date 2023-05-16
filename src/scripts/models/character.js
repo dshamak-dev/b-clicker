@@ -630,14 +630,17 @@ export default class Character extends GameComponent {
     renderContext.stroke();
     renderContext.fill();
     renderContext.clip();
-    renderContext.restore();
+
+    const fontSize = size * 0.8;
 
     this.map.renderTextByCoords(
-      point.x - size / 4,
-      point.y - size / 2,
+      point.x - (size / 2) + (fontSize / 4),
+      point.y - (size / 2) - (fontSize / 4),
       info,
       "black",
-      size
+      fontSize
     );
+
+    renderContext.restore();
   }
 }
