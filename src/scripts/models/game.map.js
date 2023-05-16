@@ -59,6 +59,10 @@ export default class GameMap extends Component {
     return size;
   }
 
+  get gameSpeed() {
+    return this.game.gameSpeed;
+  }
+
   constructor(props) {
     super(
       Object.assign(
@@ -142,6 +146,14 @@ export default class GameMap extends Component {
           }
           break;
         }
+        case "+": {
+          this.game.speed.add(1);
+          break;
+        }
+        case "-": {
+          this.game.speed.remove(1);
+          break;
+        }
       }
     });
   }
@@ -210,7 +222,9 @@ export default class GameMap extends Component {
       this.renderSeats();
     }
 
-    this.characters?.filter((c) => c.active)?.forEach((c) => c.render());
+    if (this.game.speed) {
+      this.characters?.filter((c) => c.active)?.forEach((c) => c.render());
+    }
 
     if (window.debug?.grid) {
       this.renderDebugGrid();
@@ -317,10 +331,6 @@ export default class GameMap extends Component {
       ? props.path[0]
       : this.getSeatPosition(type);
 
-    if (targetPoint == null) {
-      return;
-    }
-
     const character = createCharacter(
       type,
       Object.assign(
@@ -336,12 +346,17 @@ export default class GameMap extends Component {
       )
     );
 
+    if (targetPoint == null) {
+      character.destroy();
+    }
+
     if (character == null) {
       return;
     }
 
     this.characters.push(character);
 
+    const sDelay = SPAWN_DELAY / this.gameSpeed;
     this.nextSpawnDelay = getRandom(SPAWN_DELAY, SPAWN_DELAY * 2);
   }
 
@@ -490,7 +505,8 @@ export default class GameMap extends Component {
         character,
       };
 
-      if (character == null || character.type === CHARACTER_TYPES.DOG) {
+      // character.type === CHARACTER_TYPES.DOG
+      if (character == null) {
         next.push(info);
       }
 

@@ -5,7 +5,7 @@ export default class Nav extends Component {
   constructor(props) {
     super(
       Object.assign({}, props, {
-        id: 'nav',
+        id: "nav",
         style: `
           position: relative;
           top: 0;
@@ -18,9 +18,25 @@ export default class Nav extends Component {
       })
     );
 
+    const self = this;
+
     const infoBtn = new Component({
+      style: 'flex-grow: 1;',
       parent: this.el,
     });
+
+    const speedC = new Component({
+      style: `color: white; width: fit-content; margin: 0 auto;`,
+      observer: () => {
+        return `x${self.game?.gameSpeed}`;
+      },
+    });
+    speedC.el.onclick = () => {
+      self.game.speed.add(1);
+      speedC.update();
+    };
+
+    infoBtn.append(speedC);
 
     const menuBtn = (this.menuBtn = new Component({
       parent: this.el,
@@ -38,11 +54,12 @@ export default class Nav extends Component {
             align-items: center;
             color: white;
           `,
-      children: new Array(3)
-        .fill(0)
-        .map(
-          () => new Component({ style: "width: 60%; border-bottom: 2px solid white;" })
-        ),
+      children: new Array(3).fill(0).map(
+        () =>
+          new Component({
+            style: "width: 60%; border-bottom: 2px solid white;",
+          })
+      ),
     }));
     menuBtn.el.onclick = this.handleToggleMenu.bind(this);
 
@@ -58,7 +75,7 @@ export default class Nav extends Component {
       return;
     }
 
-    if(landingScreen.visible) {
+    if (landingScreen.visible) {
       landingScreen.hide();
       gameScreen?.show();
     } else {

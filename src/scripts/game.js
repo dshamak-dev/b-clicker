@@ -1,8 +1,12 @@
 import Component from "./components/component.js";
+import Counter from "./models/counter.js";
 import GameMoney from "./models/game.money.js";
 import GameScreen from "./screens/game.screen.js";
 import LandingScreen from "./screens/landing.screen.js";
-import { getPortraitOrientationState, getScreenSize } from "./utils/dom.utils.js";
+import {
+  getPortraitOrientationState,
+  getScreenSize,
+} from "./utils/dom.utils.js";
 
 export default class Game extends Component {
   version = 0.01;
@@ -12,8 +16,10 @@ export default class Game extends Component {
   canvas = null;
 
   activeScreenId = null;
-  
+
   screens = [];
+
+  speed;
 
   get ready() {
     return !this.loading && this.activeScreenId != null;
@@ -31,8 +37,12 @@ export default class Game extends Component {
     return this.screens[1].map;
   }
 
+  get gameSpeed() {
+    return this.speed.value;
+  }
+
   constructor() {
-    const rootEl = document.getElementById('root');
+    const rootEl = document.getElementById("root");
 
     super({ parent: rootEl });
 
@@ -48,6 +58,12 @@ export default class Game extends Component {
 
     this.money = new GameMoney();
     this.possibleMoney = new GameMoney();
+
+    this.speed = new Counter({
+      min: 0,
+      max: 4,
+      loop: true,
+    });
 
     this.init();
   }
@@ -85,7 +101,7 @@ export default class Game extends Component {
       );
     }
 
-    this.addStyle('min-width', portrait ? '100vw' : `${width}px`);
+    this.addStyle("min-width", portrait ? "100vw" : `${width}px`);
 
     const targetScreen = this.activeScreen;
 
@@ -102,7 +118,7 @@ export default class Game extends Component {
     }
 
     let characters = this.map.characters;
-    const index = characters?.findIndex(c => c.id === id);
+    const index = characters?.findIndex((c) => c.id === id);
 
     if (index >= 0) {
       characters.splice(index, 1);

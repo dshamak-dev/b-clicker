@@ -1,3 +1,4 @@
+import { getGame } from "../game.manager.js";
 import GameTime from "../models/game.time.js";
 import { getScreenContentSize } from "../utils/dom.utils.js";
 
@@ -19,6 +20,10 @@ export default class Component {
 
   get rect() {
     return getScreenContentSize();
+  }
+
+  get game() {
+    return getGame();
   }
 
   constructor({ children = [], ...props } = { children: [] }) {

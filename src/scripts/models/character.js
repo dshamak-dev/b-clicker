@@ -8,7 +8,7 @@ import {
 } from "../../constants/game.const.js";
 import { getGame } from "../game.manager.js";
 import { getRandom } from "../utils/common.utils.js";
-import { clampValue, isEqual, toFixed } from "../utils/data.utils.js";
+import { clampValue, isEqual, min, toFixed } from "../utils/data.utils.js";
 import { getCollisionInArea, positionToLocation } from "../utils/grid.utils.js";
 import { createThreshold } from "../utils/time.utils.js";
 import GameComponent from "./game.component.js";
@@ -48,11 +48,13 @@ export default class Character extends GameComponent {
   }
 
   get map() {
-    return getGame()?.map;
+    return this.game?.map;
   }
 
   get speed() {
-    return this._speed * this.time.delta;
+    const gameSpeed = this.game.speed?.value || 1;
+
+    return this._speed * gameSpeed * this.time.delta;
   }
 
   get active() {
@@ -245,8 +247,8 @@ export default class Character extends GameComponent {
       }
     }
 
-    this.validate();
     this.makeStep();
+    this.validate();
   }
 
   destroy() {
@@ -295,15 +297,20 @@ export default class Character extends GameComponent {
     }
   }
 
-  leave() {
+  leave(forse = false) {
     this.leaving = true;
-
     const { col, row } = this.position;
 
-    this.path = [{ col, row: -1 }];
-    this._seatPoint = null;
-
     this.removeStatus(CHARACTER_STATUSES.seat);
+    const nextPoint = forse ? null : this.findEmptySeat(this.type)?.position;
+
+    if (nextPoint != null && !isEqual(this.position, nextPoint)) {
+      this.path = [nextPoint];
+      this.stay();
+    } else {
+      this.path = [{ col, row: -1 }];
+    }
+    // this._seatPoint = null;
   }
 
   stay() {
@@ -343,14 +350,16 @@ export default class Character extends GameComponent {
       isSeatOccupied,
       targetPoint,
     } = this.getInfo();
+    const position = this.position;
+
+    if (!canStay && !this.leaving) {
+      this.leave(!canStay);
+      return;
+    }
 
     switch (this.moveState) {
       case CHARACTER_MOVE_STATE.seat: {
         // do action
-        if (!canStay) {
-          this.leave();
-          return false;
-        }
       }
       case CHARACTER_MOVE_STATE.search: {
         if (isOnSeat) {
@@ -364,26 +373,28 @@ export default class Character extends GameComponent {
           this.leave();
         }
 
-        if (targetPoint == null) {
-          const nextSeatToCheck = this.findEmptySeat(this.type)?.position;
+        // if (targetPoint == null) {
+        //   const nextSeatToCheck = this.findEmptySeat(this.type)?.position;
 
-          if (nextSeatToCheck != null) {
-            this.path.push(nextSeatToCheck);
-            this.stay();
-          } else {
-            this.leave();
-          }
-        }
+        //   if (nextSeatToCheck != null) {
+        //     this.path.push(nextSeatToCheck);
+        //     this.stay();
+        //   } else {
+        //     this.leave();
+        //   }
+        // }
 
         break;
       }
       case CHARACTER_MOVE_STATE.leave: {
-        if (!this.leaving) {
-          this.leave();
-          break;
-        }
+        // if (!this.leaving) {
+        //   this.leave();
+        //   break;
+        // }
 
-        if (atPoint && targetPoint?.row < 0) {
+        const isOutOfScreen = position?.row < 0 || position?.col < 0;
+
+        if (!canStay && isOutOfScreen) {
           this.destroy();
           return false;
         }
@@ -392,12 +403,12 @@ export default class Character extends GameComponent {
           break;
         }
 
-        const nextSeatToCheck = this.findEmptySeat(this.type).position;
+        // const nextSeatToCheck = this.findEmptySeat(this.type).position;
 
-        if (nextSeatToCheck != null) {
-          this.path.push(nextSeatToCheck);
-          this.stay();
-        }
+        // if (nextSeatToCheck != null) {
+        //   this.path.push(nextSeatToCheck);
+        //   this.stay();
+        // }
 
         break;
       }
@@ -408,6 +419,10 @@ export default class Character extends GameComponent {
   }
 
   makeStep() {
+    if (!this.active) {
+      return;
+    }
+
     const nextPosition = this.getNextPos();
 
     this.position = nextPosition;
@@ -415,6 +430,10 @@ export default class Character extends GameComponent {
 
   getNextPos() {
     const { col, row } = this._position;
+
+    if (!this.active) {
+      return this._position;
+    }
 
     const { targetPoint } = this.getInfo();
 
@@ -438,10 +457,6 @@ export default class Character extends GameComponent {
     const currectLocation = this.location;
     const cellLocation = this.map.getCellLocation(point);
 
-    // const direction = {
-    //   col: point.col - col,
-    //   row: point.row - row,
-    // };
     const direction = {
       x: cellLocation.x - currectLocation.x,
       y: cellLocation.y - currectLocation.y,
@@ -457,8 +472,8 @@ export default class Character extends GameComponent {
     };
 
     // moving to the point
-    let stepX = toFixed(step.x * this.speed, 3);
-    let stepY = toFixed(step.y * this.speed, 3);
+    let stepX = min(toFixed(step.x * this.speed, 3), direction.x);
+    let stepY = min(toFixed(step.y * this.speed, 3), direction.y);
 
     return { col: col + stepX, row: row + stepY };
   }
@@ -477,12 +492,12 @@ export default class Character extends GameComponent {
     const targetPoint = this.getTragetPoint();
     const cellSize = this.map.cellSize;
     const colliderLocation = this.colliderLocation;
-    const canStay = this.health > 0 && this.timeLeft > 0;
+    let canStay = this.health > 0 && this.timeLeft > 0;
     const isOnSeat = this.hasStatus(CHARACTER_STATUSES.seat);
 
     const targetPointLocation = {
-      x: targetPoint.col * cellSize,
-      y: targetPoint.row * cellSize,
+      x: targetPoint?.col * cellSize,
+      y: targetPoint?.row * cellSize,
     };
     const atPoint = getCollisionInArea(colliderLocation.x, colliderLocation.y, {
       ...targetPointLocation,
@@ -510,6 +525,18 @@ export default class Character extends GameComponent {
     const isMyPlace = isSeatOccupied && seatCharacter.id === this.id;
 
     const canSeat = atPoint && isMyPlace;
+
+    // if (atPoint) {
+    //   console.info('at point');
+    // } 
+
+    // if (atPoint && isSeatOccupied) {
+    //   console.info('at point');
+    // } 
+
+    // if (atPoint && !isMyPlace) {
+    //   console.info('at point');
+    // }
 
     return {
       isOnSeat,

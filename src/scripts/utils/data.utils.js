@@ -39,3 +39,19 @@ export const toFixed = (num, dec) => {
 
   return Number(num.toFixed(dec));
 };
+
+export const min = (a, b) => {
+  if (a < 0 && b < 0) {
+    return Math.max(a, b);
+  }
+
+  return Math.min(a, b);
+};
+
+export const max = (a, b) => {
+  if (a < 0 && b < 0) {
+    return Math.min(a, b);
+  }
+
+  return Math.max(a, b);
+};

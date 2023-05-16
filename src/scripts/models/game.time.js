@@ -1,3 +1,4 @@
+import { TARGET_FPS } from "../../constants/game.const.js";
 import { clampValue, toFixed } from "../utils/data.utils.js";
 import { createThreshold } from "../utils/time.utils.js";
 
@@ -8,7 +9,7 @@ export default class GameTime {
   fps;
 
   get delta() {
-    return toFixed(this.updateRate / 1000, 2);
+    return toFixed(TARGET_FPS / 1000, 2);
   }
   
   constructor() {
