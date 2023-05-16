@@ -64,6 +64,9 @@ export default class Game extends Component {
       max: 4,
       loop: true,
     });
+    this.animalCounter = new Counter({
+      min: 0
+    });
 
     this.init();
   }

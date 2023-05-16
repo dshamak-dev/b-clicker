@@ -14,4 +14,10 @@ export default class AnimalCharacter extends Character {
       this.sprite.framePosition = { col: getRandom(0, 2), row: 1 };
     };
   }
+
+  destroy() {
+    this.game.animalCounter.add(1);
+
+    super.destroy();
+  }
 }

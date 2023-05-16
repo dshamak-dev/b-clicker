@@ -13,7 +13,6 @@ import { formatNumberOutput, isEqual } from "../utils/data.utils.js";
 import { getCollisionInArea, positionToLocation } from "../utils/grid.utils.js";
 import { getCurrentTheme } from "../utils/theme.utils.js";
 import { createThreshold, getStoreOpenState } from "../utils/time.utils.js";
-import Character from "./character.js";
 
 const SPAWN_DELAY = 5 * 1000;
 
@@ -83,6 +82,8 @@ export default class GameMap extends Component {
     this.nextSpawnDelay = getRandom(SPAWN_DELAY, SPAWN_DELAY * 2);
 
     this.config = Object.assign({}, MAP_CONFIG);
+
+    this.maxCharacters = this.config.points.seats.length * 2;
 
     this.bg = new Component({
       tagType: "img",
@@ -325,11 +326,15 @@ export default class GameMap extends Component {
   }
 
   spawnCharacter(props) {
+    if (this.characters?.length >= this.maxCharacters || !this.allowEnter) {
+      return;
+    }
+
     const type = getRandomArrayItem(Object.values(CHARACTER_TYPES));
     const position = this.getRandomSpawnPosition();
     const targetPoint = props?.path
       ? props.path[0]
-      : this.getSeatPosition(type);
+      : this.getSeatPositionForCharacter(type)?.position;
 
     const character = createCharacter(
       type,
@@ -348,6 +353,7 @@ export default class GameMap extends Component {
 
     if (targetPoint == null) {
       character.destroy();
+      return;
     }
 
     if (character == null) {
@@ -357,7 +363,7 @@ export default class GameMap extends Component {
     this.characters.push(character);
 
     const sDelay = SPAWN_DELAY / this.gameSpeed;
-    this.nextSpawnDelay = getRandom(SPAWN_DELAY, SPAWN_DELAY * 2);
+    this.nextSpawnDelay = getRandom(sDelay, sDelay * 2);
   }
 
   getRandomSpawnPosition() {
@@ -552,13 +558,21 @@ export default class GameMap extends Component {
     const widthInCols = 3;
     const gridSize = map.gridSize;
 
-    const startCol = Math.floor(gridSize.cols - widthInCols);
+    const startCol = 2;
     const startRow = 0;
+
+    const animalCounter = this.game?.animalCounter?.value || 0;
 
     map.renderText(
       startCol,
       startRow,
-      `${formatNumberOutput(current, 3)} / ${formatNumberOutput(possible, 3)}`,
+      `Animals: ${formatNumberOutput(
+        animalCounter,
+        4
+      )}; Money: ${formatNumberOutput(current, 3)} / ${formatNumberOutput(
+        possible,
+        3
+      )}`,
       "white"
     );
   }
