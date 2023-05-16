@@ -5,3 +5,8 @@ export const CHARACTER_MOVE_STATE = {
   seat: 3,
   leave: 4
 };
+
+export const CHARACTER_STATUSES = {
+  none: 0,
+  seat: 1,
+};

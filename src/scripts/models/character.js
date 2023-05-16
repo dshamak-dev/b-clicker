@@ -1,4 +1,7 @@
-import { CHARACTER_MOVE_STATE } from "../../constants/character.const.js";
+import {
+  CHARACTER_MOVE_STATE,
+  CHARACTER_STATUSES,
+} from "../../constants/character.const.js";
 import {
   CHARACTER_GENDERS,
   CHARACTER_TYPES,
@@ -8,6 +11,7 @@ import { getGame } from "../game.manager.js";
 import { getRandom } from "../utils/common.utils.js";
 import { clampValue, isEqual, toFixed } from "../utils/data.utils.js";
 import { getCollisionInArea, positionToLocation } from "../utils/grid.utils.js";
+import { createThreshold } from "../utils/time.utils.js";
 import GameComponent from "./game.component.js";
 import GameTime from "./game.time.js";
 
@@ -30,6 +34,8 @@ export default class Character extends GameComponent {
   _health;
   _img;
 
+  actionThreshold;
+
   get health() {
     return this._health;
   }
@@ -45,7 +51,7 @@ export default class Character extends GameComponent {
   }
 
   get speed() {
-    return this._speed; // * this.time.delta;
+    return this._speed * this.time.delta;
   }
 
   get active() {
@@ -148,35 +154,35 @@ export default class Character extends GameComponent {
   }
 
   get moveState() {
-    const { canStay, atPoint, isMyPlace, targetSeat } = this.getInfo();
+    const { canStay, atPoint, isOnSeat, targetPoint } = this.getInfo();
 
     if (!canStay) {
       return CHARACTER_MOVE_STATE.leave;
     }
 
-    if (this.leaving) {
-      return targetSeat != null
-        ? CHARACTER_MOVE_STATE.search
-        : CHARACTER_MOVE_STATE.leave;
-    }
-
-    if (isMyPlace && atPoint) {
+    if (isOnSeat) {
       return CHARACTER_MOVE_STATE.seat;
     }
 
-    if (!atPoint && targetSeat != null) {
+    if (targetPoint != null) {
       return CHARACTER_MOVE_STATE.search;
     }
 
     return CHARACTER_MOVE_STATE.leave;
   }
 
-  constructor({ items, interests, path, speed, color, ...props }) {
+  get statuses() {
+    return this._statuses?.slice() || [];
+  }
+
+  constructor({ items, interests, position, path, speed, color, ...props }) {
     super(Object.assign(props));
 
     const hits = getRandom(1, 3, true);
     const budget = getRandom(5, 20);
-    const ratePerTime = getRandom(1, 3) / TARGET_FPS;
+    const ratePerTime = getRandom(1, 3);
+
+    this.actionThreshold = createThreshold(getRandom(1, 3) * 1000);
 
     Object.assign(
       this,
@@ -203,30 +209,62 @@ export default class Character extends GameComponent {
     // generate path points
     this.path = path || [];
 
-    this.position = path[0];
+    this.position = position;
 
-    this._speed = 1 / TARGET_FPS;
+    this._speed = 1;
 
     this._active = true;
   }
 
-  update() {
-    this.time.update();
+  json() {
+    const {
+      _position,
+      statuses,
+      type,
+      id,
+      path,
+      hits,
+      budget,
+      _money,
+      _health,
+      ratePerTime,
+    } = this;
 
-    this.makeStep();
+    return {
+      _position,
+      statuses,
+      type,
+      id,
+      path,
+      hits,
+      budget,
+      _money,
+      _health,
+      ratePerTime
+    };
+  }
+
+  update() {
+    if (!this.active) {
+      return;
+    }
+
+    this.time.update();
 
     switch (this.moveState) {
       case CHARACTER_MOVE_STATE.seat: {
         // do action
-        return this.spend();
+        return this.actionThreshold(this.spend.bind(this));
       }
     }
 
     this.validate();
+    this.makeStep();
   }
 
   destroy() {
     this._active = false;
+    this.game.removeCharacter(this.id);
   }
 
   poke() {
@@ -247,6 +285,10 @@ export default class Character extends GameComponent {
     }
 
     this._money -= this.ratePerTime;
+
+    if (this.game?.money) {
+      this.game.money.addMoney(this.ratePerTime);
+    }
   }
 
   leave() {
@@ -256,22 +298,50 @@ export default class Character extends GameComponent {
 
     this.path = [{ col, row: -1 }];
     this._seatPoint = null;
+
+    this.removeStatus(CHARACTER_STATUSES.seat);
   }
 
   stay() {
     this.leaving = false;
   }
 
+  addStatus(status) {
+    if (!status || this.hasStatus(status)) {
+      return;
+    }
+
+    if (!this._statuses) {
+      this._statuses = [];
+    }
+
+    this._statuses.push(status);
+  }
+
+  removeStatus(status) {
+    if (!status) {
+      return;
+    }
+
+    const index = this._statuses?.findIndex((s) => s === status);
+
+    if (index >= 0) {
+      this._statuses.splice(index, 1);
+    }
+  }
+
   validate() {
-    const { canStay, atPoint, isMyPlace, isSeatOccupied, targetSeat } =
-      this.getInfo();
+    const {
+      canStay,
+      atPoint,
+      isOnSeat,
+      isMyPlace,
+      isSeatOccupied,
+      targetPoint,
+    } = this.getInfo();
 
     switch (this.moveState) {
       case CHARACTER_MOVE_STATE.seat: {
-        if (this._seatPoint == null) {
-          this._seatPoint = targetSeat;
-        }
-
         // do action
         if (!canStay) {
           this.leave();
@@ -279,11 +349,18 @@ export default class Character extends GameComponent {
         }
       }
       case CHARACTER_MOVE_STATE.search: {
-        if (!atPoint && targetSeat != null) {
+        if (isOnSeat) {
           break;
         }
 
-        if (targetSeat == null) {
+        if (atPoint && isMyPlace && isSeatOccupied) {
+          this.addStatus(CHARACTER_STATUSES.seat);
+          break;
+        } else if (atPoint && isSeatOccupied && !isMyPlace) {
+          this.leave();
+        }
+
+        if (targetPoint == null) {
           const nextSeatToCheck = this.findEmptySeat(this.type)?.position;
 
           if (nextSeatToCheck != null) {
@@ -302,7 +379,7 @@ export default class Character extends GameComponent {
           break;
         }
 
-        if (atPoint && this.path.length <= 1) {
+        if (atPoint && targetPoint?.row < 0) {
           this.destroy();
           return false;
         }
@@ -321,16 +398,6 @@ export default class Character extends GameComponent {
         break;
       }
       default: {
-        if (!this.leaving && this.health <= 0) {
-          this.leave();
-          return false;
-        }
-
-        if (this.leaving && atPoint && this.path.length <= 1) {
-          this.destroy();
-          return false;
-        }
-
         return true;
       }
     }
@@ -345,16 +412,12 @@ export default class Character extends GameComponent {
   getNextPos() {
     const { col, row } = this._position;
 
-    const { targetPoint, targetSeat } = this.getInfo();
+    const { targetPoint } = this.getInfo();
 
     let point = targetPoint;
 
     switch (this.moveState) {
       case CHARACTER_MOVE_STATE.search: {
-        // moving around to the seat
-        // if (targetSeat != null) {
-        //   break;
-        // }
         break;
       }
       case CHARACTER_MOVE_STATE.seat: {
@@ -396,10 +459,6 @@ export default class Character extends GameComponent {
     return { col: col + stepX, row: row + stepY };
   }
 
-  turn() {
-    this.path = this.path.slice(0, 1);
-  }
-
   getTragetPoint() {
     if (!this.path) {
       return null;
@@ -410,10 +469,10 @@ export default class Character extends GameComponent {
 
   getInfo() {
     const targetPoint = this.getTragetPoint();
-    const targetSeat = this.path.length > 1 ? this.path[1] : null;
     const cellSize = this.map.cellSize;
     const colliderLocation = this.colliderLocation;
     const canStay = this.health > 0 && this.timeLeft > 0;
+    const isOnSeat = this.hasStatus(CHARACTER_STATUSES.seat);
 
     const targetPointLocation = {
       x: targetPoint.col * cellSize,
@@ -427,12 +486,14 @@ export default class Character extends GameComponent {
 
     let seatCharacter = null;
 
-    if (isEqual(this._seatPoint, targetPoint)) {
+    if (isOnSeat) {
       seatCharacter = this;
     } else {
       seatCharacter =
-        targetSeat != null &&
-        this.map.getCharacterAtCoords(positionToLocation(targetSeat, cellSize));
+        targetPoint &&
+        this.map.getCharacterAtCoords(
+          positionToLocation(targetPoint, cellSize)
+        );
     }
 
     const isSeatOccupied = seatCharacter != null;
@@ -441,8 +502,8 @@ export default class Character extends GameComponent {
     const canSeat = atPoint && isMyPlace;
 
     return {
+      isOnSeat,
       targetPoint,
-      targetSeat,
       atPoint,
       seatCharacter,
       isSeatOccupied,
@@ -454,6 +515,10 @@ export default class Character extends GameComponent {
 
   findEmptySeat() {
     return this.map.getSeatPositionForCharacter(this);
+  }
+
+  hasStatus(status) {
+    return this.statuses.includes(status);
   }
 
   render() {

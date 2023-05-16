@@ -4,7 +4,10 @@ import Canvas from "../components/canvas.js";
 import Component from "../components/component.js";
 import { getGame } from "../game.manager.js";
 import { getRandomArrayItem } from "../utils/array.utils.js";
-import { getCharacterTypeIdByLabel } from "../utils/character.utils.js";
+import {
+  createCharacter,
+  getCharacterTypeIdByLabel,
+} from "../utils/character.utils.js";
 import { getRandom } from "../utils/common.utils.js";
 import { isEqual } from "../utils/data.utils.js";
 import { getCollisionInArea, positionToLocation } from "../utils/grid.utils.js";
@@ -211,6 +214,8 @@ export default class GameMap extends Component {
     if (window.debug?.grid) {
       this.renderDebugGrid();
     }
+
+    this.game.money.render();
   }
 
   renderObjects() {
@@ -307,22 +312,28 @@ export default class GameMap extends Component {
   spawnCharacter(props) {
     const type = getRandomArrayItem(Object.values(CHARACTER_TYPES));
     const position = this.getRandomSpawnPosition();
-    const targetPoint = this.getSeatPosition(type);
+    const targetPoint = props?.path
+      ? props.path[0]
+      : this.getSeatPosition(type);
 
     if (targetPoint == null) {
       return;
     }
 
-    const character = new Character(
+    const character = createCharacter(
+      type,
       Object.assign(
         {
-          type,
           position,
-          path: [{ ...targetPoint, row: 0 }, targetPoint],
+          path: [targetPoint],
         },
         props
       )
     );
+
+    if (character == null) {
+      return;
+    }
 
     this.characters.push(character);
 
@@ -330,8 +341,8 @@ export default class GameMap extends Component {
   }
 
   getRandomSpawnPosition() {
-    const positions = new Array(this.gridSize.col).fill(null).map((_, i) => {
-      return { col: 1, row: -1 };
+    const positions = new Array(this.gridSize.cols).fill(null).map((_, i) => {
+      return { col: i, row: -1 };
     });
     const pos = getRandomArrayItem(positions);
 
@@ -376,6 +387,21 @@ export default class GameMap extends Component {
       });
     });
 
+    const seatPos = this.config.points.seats.find(({ position }) => {
+      const location = positionToLocation(position, cellSize);
+
+      return getCollisionInArea(x, y, {
+        x: location.x,
+        y: location.y,
+        width: cellSize,
+        height: cellSize,
+      });
+    });
+
+    if (seatPos) {
+      this.spawnCharacter({ path: [seatPos.position] });
+    }
+
     if (doorOnPos) {
       this[this.allowEnter ? "closeDoors" : "openDoors"]();
     }
@@ -386,15 +412,17 @@ export default class GameMap extends Component {
   }
 
   getAllAtLocation({ x, y }) {
-    return this.characters?.filter((c) => {
-      const res = getCollisionInArea(x, y, {
-        ...c.location,
-        width: c.width,
-        height: c.height,
-      });
+    return (
+      this.characters?.filter((c) => {
+        const res = getCollisionInArea(x, y, {
+          ...c.location,
+          width: c.width,
+          height: c.height,
+        });
 
-      return res;
-    }) || [];
+        return res;
+      }) || []
+    );
   }
 
   getCellIndexByCoords(x, y) {

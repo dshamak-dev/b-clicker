@@ -1,4 +1,5 @@
 import Component from "./components/component.js";
+import GameMoney from "./models/game.money.js";
 import GameScreen from "./screens/game.screen.js";
 import LandingScreen from "./screens/landing.screen.js";
 import { getPortraitOrientationState, getScreenSize } from "./utils/dom.utils.js";
@@ -45,6 +46,8 @@ export default class Game extends Component {
 
     window.addEventListener("resize", this.render.bind(this));
 
+    this.money = new GameMoney();
+
     this.init();
   }
 
@@ -90,5 +93,18 @@ export default class Game extends Component {
     }
 
     targetScreen?.render();
+  }
+
+  removeCharacter(id) {
+    if (id == null) {
+      return;
+    }
+
+    let characters = this.map.characters;
+    const index = characters?.findIndex(c => c.id === id);
+
+    if (index >= 0) {
+      characters.splice(index, 1);
+    }
   }
 }

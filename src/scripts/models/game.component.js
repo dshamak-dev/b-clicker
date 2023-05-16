@@ -1,13 +1,23 @@
+import { getGame } from "../game.manager.js";
 import { generateId, toFixed } from "../utils/data.utils.js";
 import Sprite from "./sprite.js";
 
 export default class GameComponent {
   id;
   sprite;
+  _game;
 
   _position = { col: 0, row: 0, layer: 0 };
   size = { width: 0, height: 0 };
   material = { color: "transparent", img: null };
+
+  get game() {
+    return this._game ? this._game : (this._game = getGame());
+  }
+
+  get map() {
+    return this.game?.map;
+  }
 
   get position() {
     return Object.assign({
