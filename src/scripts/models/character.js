@@ -25,6 +25,7 @@ export default class Character extends GameComponent {
   hits;
   budget;
   ratePerTime;
+  color;
   // private
   _speed;
   _active;
@@ -96,18 +97,6 @@ export default class Character extends GameComponent {
     return { x: x + this.width / 2, y: y + this.height / 2 };
   }
 
-  get color() {
-    switch (this.type) {
-      case CHARACTER_TYPES.DOG: {
-        return "red";
-      }
-      case CHARACTER_TYPES.HUMAN:
-      default: {
-        return "lime";
-      }
-    }
-  }
-
   get imgInfo() {
     if (!this.sprite || !this.sprite.image) {
       return null;
@@ -115,7 +104,7 @@ export default class Character extends GameComponent {
 
     const image = this.sprite.image;
 
-    const rect = this._img.getBoundingClientRect();
+    const rect = image.getBoundingClientRect();
 
     const width = rect.width || image.width;
     const height = rect.height || image.height;
@@ -262,6 +251,20 @@ export default class Character extends GameComponent {
 
   destroy() {
     this._active = false;
+
+    switch (this.type) {
+      case CHARACTER_TYPES.DOG: {
+        break;
+      }
+      case CHARACTER_TYPES.HUMAN: {
+        console.info("Left with money", this._money);
+        break;
+      }
+      default: {
+        break;
+      }
+    }
+
     this.game.removeCharacter(this.id);
   }
 
@@ -277,16 +280,18 @@ export default class Character extends GameComponent {
       }
     }
 
-    if (this._money < this.ratePerTime) {
-      this.leave();
-      return;
-    }
+    // if (this._money < this.ratePerTime) {
+    //   this.leave();
+    //   return;
+    // }
+    const cost = Math.min(this.ratePerTime, this._money);
 
-    this._money -= this.ratePerTime;
     this.poke();
+    this._money -= cost;
 
     if (this.game?.money) {
-      this.game.money.addMoney(this.ratePerTime);
+      this.game.money.add(cost);
+      this.game.map.render();
     }
   }
 
@@ -467,6 +472,8 @@ export default class Character extends GameComponent {
   }
 
   getInfo() {
+    const self = this;
+
     const targetPoint = this.getTragetPoint();
     const cellSize = this.map.cellSize;
     const colliderLocation = this.colliderLocation;
@@ -488,11 +495,15 @@ export default class Character extends GameComponent {
     if (isOnSeat) {
       seatCharacter = this;
     } else {
+      const charactersInPoint = targetPoint
+        ? this.map.getAllCharactersAtLocation(
+            positionToLocation(targetPoint, cellSize)
+          )
+        : [];
       seatCharacter =
-        targetPoint &&
-        this.map.getCharacterAtCoords(
-          positionToLocation(targetPoint, cellSize)
-        );
+        charactersInPoint.length > 0
+          ? charactersInPoint.sort((s) => (s.id === self.id ? 1 : -1)).shift()
+          : null;
     }
 
     const isSeatOccupied = seatCharacter != null;

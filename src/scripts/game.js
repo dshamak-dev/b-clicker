@@ -47,6 +47,7 @@ export default class Game extends Component {
     window.addEventListener("resize", this.render.bind(this));
 
     this.money = new GameMoney();
+    this.possibleMoney = new GameMoney();
 
     this.init();
   }

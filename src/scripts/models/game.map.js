@@ -9,7 +9,7 @@ import {
   getCharacterTypeIdByLabel,
 } from "../utils/character.utils.js";
 import { getRandom } from "../utils/common.utils.js";
-import { isEqual } from "../utils/data.utils.js";
+import { formatNumberOutput, isEqual } from "../utils/data.utils.js";
 import { getCollisionInArea, positionToLocation } from "../utils/grid.utils.js";
 import { getCurrentTheme } from "../utils/theme.utils.js";
 import { createThreshold, getStoreOpenState } from "../utils/time.utils.js";
@@ -216,7 +216,7 @@ export default class GameMap extends Component {
       this.renderDebugGrid();
     }
 
-    this.game.money.render();
+    this.renderStats();
   }
 
   renderObjects() {
@@ -379,7 +379,7 @@ export default class GameMap extends Component {
     const y = e.clientY - rect.top;
     // const { row, col, index } = this.getCellIndexByCoords(x, y);
 
-    const characters = this.getAllAtLocation({ x, y });
+    const characters = this.getAllCharactersAtLocation({ x, y });
 
     const doorOnPos = this.config.points.doors.find(({ position }) => {
       const location = positionToLocation(position, cellSize);
@@ -416,7 +416,7 @@ export default class GameMap extends Component {
     }
   }
 
-  getAllAtLocation({ x, y }) {
+  getAllCharactersAtLocation({ x, y }) {
     return (
       this.characters?.filter((c) => {
         const res = getCollisionInArea(x, y, {
@@ -520,5 +520,30 @@ export default class GameMap extends Component {
 
   closeDoors() {
     this.allowEnter = false;
+  }
+
+  renderStats() {
+    const current = this.game.money.money;
+    const possible = this.game.possibleMoney.money;
+
+    const map = this;
+    const rCtx = map?.renderContext;
+
+    if (map == null || rCtx == null) {
+      return;
+    }
+
+    const widthInCols = 3;
+    const gridSize = map.gridSize;
+
+    const startCol = Math.floor(gridSize.cols - widthInCols);
+    const startRow = 0;
+
+    map.renderText(
+      startCol,
+      startRow,
+      `${formatNumberOutput(current, 3)} / ${formatNumberOutput(possible, 3)}`,
+      "white"
+    );
   }
 }

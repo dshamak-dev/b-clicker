@@ -17,11 +17,20 @@ export default class HumanCharacter extends Character {
     this.budget = budget;
     this._money = budget;
     this.ratePerTime = ratePerTime;
-    this.hits = Math.min(hits, Math.max(1, Math.floor(budget / ratePerTime)));
+    this.hits = Math.max(hits, Math.max(1, Math.floor(budget / ratePerTime)));
     this._health = this.hits;
 
+
+    this.color = 'lime';
     if (this.sprite) {
       this.sprite.framePosition = { col: getRandom(0, 4), row: 0 };
     };
+
+    if (this.game?.possibleMoney) {
+      this.game.possibleMoney.add(this.budget);
+      console.warn('budget', this.budget);
+
+      this.game.map.render();
+    }
   }
 }
