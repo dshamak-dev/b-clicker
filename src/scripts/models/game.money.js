@@ -21,7 +21,7 @@ export default class GameMoney extends GameComponent {
   }
 
   addMoney(value = 0) {
-    this.money = toFixed(this.money + value, 2);
+    this.money = toFixed(this._money + value, 2);
   }
 
   update() {}

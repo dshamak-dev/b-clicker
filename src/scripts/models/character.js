@@ -5,7 +5,6 @@ import {
 import {
   CHARACTER_GENDERS,
   CHARACTER_TYPES,
-  TARGET_FPS,
 } from "../../constants/game.const.js";
 import { getGame } from "../game.manager.js";
 import { getRandom } from "../utils/common.utils.js";
@@ -14,6 +13,7 @@ import { getCollisionInArea, positionToLocation } from "../utils/grid.utils.js";
 import { createThreshold } from "../utils/time.utils.js";
 import GameComponent from "./game.component.js";
 import GameTime from "./game.time.js";
+import Sprite from "./sprite.js";
 
 export default class Character extends GameComponent {
   name;
@@ -109,41 +109,30 @@ export default class Character extends GameComponent {
   }
 
   get imgInfo() {
-    if (!this._img) {
+    if (!this.sprite || !this.sprite.image) {
       return null;
     }
 
+    const image = this.sprite.image;
+
     const rect = this._img.getBoundingClientRect();
 
-    const width = rect.width || this._img.width;
-    const height = rect.height || this._img.height;
+    const width = rect.width || image.width;
+    const height = rect.height || image.height;
     // const spriteCols = Math.floor(width / this.width);
     // const spriteRows = Math.floor(height / this.height);
     const tileWidth = this.width;
     const tileHeight = this.height;
+    const framePosition = this.sprite.framePosition;
 
-    let tileCol = 0;
-    let tileRow = 0;
-
-    switch (this.type) {
-      case CHARACTER_TYPES.DOG: {
-        break;
-      }
-      case CHARACTER_TYPES.HUMAN: {
-        tileCol = 1;
-        break;
-      }
-      default: {
-        tileCol = 2;
-        break;
-      }
-    }
+    let tileCol = framePosition.col;
+    let tileRow = framePosition.row;
 
     let offsetX = tileCol * tileWidth * -1;
     let offsetY = tileRow * tileHeight * -1;
 
     return {
-      img: this._img,
+      img: image,
       width: width,
       height: height,
       tileWidth,
@@ -175,12 +164,21 @@ export default class Character extends GameComponent {
     return this._statuses?.slice() || [];
   }
 
-  constructor({ items, interests, position, path, speed, color, ...props }) {
+  constructor({
+    items,
+    interests,
+    position,
+    path,
+    speed,
+    color,
+    gender,
+    ...props
+  }) {
     super(Object.assign(props));
 
     const hits = getRandom(1, 3, true);
-    const budget = getRandom(5, 20);
-    const ratePerTime = getRandom(1, 3);
+    const budget = 1;
+    const ratePerTime = 0;
 
     this.actionThreshold = createThreshold(getRandom(1, 3) * 1000);
 
@@ -188,7 +186,7 @@ export default class Character extends GameComponent {
       this,
       {
         type: CHARACTER_TYPES.UNKNOWN,
-        gender: CHARACTER_GENDERS.UNKNOWN,
+        gender: gender || CHARACTER_GENDERS.UNKNOWN,
         name: null,
         hits,
         _health: hits,
@@ -240,7 +238,7 @@ export default class Character extends GameComponent {
       budget,
       _money,
       _health,
-      ratePerTime
+      ratePerTime,
     };
   }
 
@@ -285,6 +283,7 @@ export default class Character extends GameComponent {
     }
 
     this._money -= this.ratePerTime;
+    this.poke();
 
     if (this.game?.money) {
       this.game.money.addMoney(this.ratePerTime);

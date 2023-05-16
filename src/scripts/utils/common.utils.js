@@ -1,6 +1,6 @@
 // max is NOT included
 export const getRandom = (min, max, floor = true) => {
-  const rand = Math.random() * max + min;
+  const rand = Math.max(Math.random() * max + min, min);
   const res = Math.min(max, rand);
 
   if (floor) {

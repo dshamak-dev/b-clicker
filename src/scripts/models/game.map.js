@@ -183,10 +183,11 @@ export default class GameMap extends Component {
     this.bg.el.setAttribute("height", height);
 
     const spriteWidth = cellSize * 4;
+    const spriteHeight = cellSize * 2;
     this.charactersSprite.addStyle("width", `${spriteWidth}px`);
     this.charactersSprite.el.setAttribute("width", spriteWidth);
-    this.charactersSprite.addStyle("height", `${cellSize}px`);
-    this.charactersSprite.el.setAttribute("height", cellSize);
+    this.charactersSprite.addStyle("height", `${spriteHeight}px`);
+    this.charactersSprite.el.setAttribute("height", spriteHeight);
 
     this.canvas.el.setAttribute("width", width);
     this.canvas.el.setAttribute("height", height);
@@ -326,6 +327,10 @@ export default class GameMap extends Component {
         {
           position,
           path: [targetPoint],
+          sprite: {
+            url: "./src/assets/characters.sprite.png",
+            image: this.charactersSprite.el,
+          },
         },
         props
       )
