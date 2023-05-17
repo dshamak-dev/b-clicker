@@ -1,5 +1,6 @@
 export const WORKING_HOURS = [10, 20];
-export const TARGET_FPS = 30;
+export const TARGET_FPS = 45;
+export const MAX_FPS = 60;
 
 export const CHARACTER_TYPES = {
   UNKNOWN: 0,

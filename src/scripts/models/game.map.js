@@ -13,6 +13,7 @@ import { formatNumberOutput, isEqual } from "../utils/data.utils.js";
 import { getCollisionInArea, positionToLocation } from "../utils/grid.utils.js";
 import { getCurrentTheme } from "../utils/theme.utils.js";
 import { createThreshold, getStoreOpenState } from "../utils/time.utils.js";
+import HumanCharacter from "./characters/human.character.js";
 
 const SPAWN_DELAY = 5 * 1000;
 
@@ -326,10 +327,6 @@ export default class GameMap extends Component {
   }
 
   spawnCharacter(props) {
-    if (this.characters?.length >= this.maxCharacters || !this.allowEnter) {
-      return;
-    }
-
     const type = getRandomArrayItem(Object.values(CHARACTER_TYPES));
     const position = this.getRandomSpawnPosition();
     const targetPoint = props?.path
@@ -341,7 +338,7 @@ export default class GameMap extends Component {
       Object.assign(
         {
           position,
-          path: [targetPoint],
+          path: targetPoint ? [targetPoint] : [],
           sprite: {
             url: "./src/assets/characters.sprite.png",
             image: this.charactersSprite.el,
@@ -351,12 +348,14 @@ export default class GameMap extends Component {
       )
     );
 
-    if (targetPoint == null) {
+    const canEnter = this.characters?.length < this.maxCharacters && targetPoint != null;
+
+    if (!canEnter && character instanceof HumanCharacter) {
+      this.game.possibleMoney.add(character.budget);
       character.destroy();
-      return;
     }
 
-    if (character == null) {
+    if (!this.allowEnter || !canEnter || !targetPoint == null || character == null) {
       return;
     }
 
@@ -418,7 +417,7 @@ export default class GameMap extends Component {
     if (window.debug.grid) {
       seatPos = this.config.points.seats.find(({ position }) => {
         const location = positionToLocation(position, cellSize);
-  
+
         return getCollisionInArea(x, y, {
           x: location.x,
           y: location.y,
@@ -494,7 +493,7 @@ export default class GameMap extends Component {
   getSeatPositionForCharacter(character) {
     const available = this.getEmptySeats(character);
 
-    return available[0];
+    return getRandomArrayItem(available);
   }
 
   getEmptySeats(targetCharacter) {
@@ -534,7 +533,13 @@ export default class GameMap extends Component {
     return sorted;
   }
 
-  getCellLocation({ col, row }) {
+  getCellLocation(pos) {
+    if (pos == null) {
+      return null;
+    }
+
+    const { col, row } = pos;
+
     const cellSize = this.cellSize;
 
     return { x: col * cellSize, y: row * cellSize };
@@ -559,8 +564,8 @@ export default class GameMap extends Component {
       return;
     }
 
-    const widthInCols = 3;
-    const gridSize = map.gridSize;
+    // const widthInCols = 3;
+    // const gridSize = map.gridSize;
 
     const startCol = 2;
     const startRow = 0;

@@ -60,7 +60,7 @@ export default class Game extends Component {
     this.possibleMoney = new GameMoney();
 
     this.speed = new Counter({
-      min: 0,
+      min: 1,
       max: 4,
       loop: true,
     });

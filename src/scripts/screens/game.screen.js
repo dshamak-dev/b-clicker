@@ -1,4 +1,4 @@
-import { TARGET_FPS } from "../../constants/game.const.js";
+import { MAX_FPS, TARGET_FPS } from "../../constants/game.const.js";
 import Component from "../components/component.js";
 import Nav from "../components/nav.js";
 import ScreenComponent from "../components/screen.component.js";
@@ -52,8 +52,8 @@ export default class GameScreen extends ScreenComponent {
 
     this.update();
 
-    // this.animationTimer.start(this.tick.bind(this), 1000 / TARGET_FPS);
-    this.tick();
+    this.animationTimer.start(this.tick.bind(this), 1000 / TARGET_FPS);
+    // this.tick();
 
     if (navigator.wakeLock !== null) {
       const self = this;
@@ -100,16 +100,20 @@ export default class GameScreen extends ScreenComponent {
 
     this.time.update();
 
+    const gameSpeed = this.game.gameSpeed;
+    const frameRate = Math.min(MAX_FPS, TARGET_FPS * gameSpeed);
+    const delay = 1000 / frameRate;
+
     this.threshold(() => {
-      if (self.game.speed.value) {
+      if (gameSpeed) {
         self.map.update();
       }
 
       self.el.setAttribute("frame-rate", this.time.fps);
-    });
+    }, delay);
 
-    if (this.visible) {
-      window.requestAnimationFrame(this.tick.bind(this));
-    }
+    // if (this.visible) {
+    //   window.requestAnimationFrame(this.tick.bind(this));
+    // }
   }
 }

@@ -308,7 +308,7 @@ export default class Character extends GameComponent {
       this.path = [nextPoint];
       this.stay();
     } else {
-      this.path = [{ col, row: -1 }];
+      this.path = [{ col: col || getRandom(1, 8), row: -1 }];
     }
     // this._seatPoint = null;
   }
@@ -455,27 +455,37 @@ export default class Character extends GameComponent {
 
     // const cellSize = this.map.cellSize;
     const currectLocation = this.location;
-    const cellLocation = this.map.getCellLocation(point);
+    const cellLocation = this.map?.getCellLocation(point);
 
-    const direction = {
+    if (currectLocation == null || cellLocation == null) {
+      return this._position;
+    }
+
+    const distance = {
       x: cellLocation.x - currectLocation.x,
       y: cellLocation.y - currectLocation.y,
     };
 
-    if (!direction.x && !direction.y) {
+    if (!distance.x && !distance.y) {
       return this._position;
     }
 
     const step = {
-      x: clampValue(direction.x, 1),
-      y: clampValue(direction.y, 1),
+      x: clampValue(distance.x, 1),
+      y: clampValue(distance.y, 1),
     };
 
     // moving to the point
-    let stepX = min(toFixed(step.x * this.speed, 3), direction.x);
-    let stepY = min(toFixed(step.y * this.speed, 3), direction.y);
+    let stepX = min(toFixed(step.x * this.speed, 2), distance.x);
+    let stepY = min(toFixed(step.y * this.speed, 2), distance.y);
 
-    return { col: col + stepX, row: row + stepY };
+    const decimals = this.speed < 0.4 ? 2 : 1;
+
+    const dirAngle = Math.atan2(step.y, step.x);
+    stepX = toFixed(Math.cos(dirAngle) * this.speed, decimals);
+    stepY = toFixed(Math.sin(dirAngle) * this.speed, decimals);
+
+    return { col: toFixed(col + stepX, 2), row: toFixed(row + stepY, 2) };
   }
 
   getTragetPoint() {
@@ -615,27 +625,29 @@ export default class Character extends GameComponent {
       }
     }
 
-    const size = this.height * 0.4;
+    const numSize = this.height * 0.5;
 
     const point = {
-      x: x + this.width - size / 4,
-      y: y + size / 4,
+      x: x + this.width - numSize / 4,
+      y: y + numSize / 4,
     };
 
     renderContext.save();
     renderContext.beginPath();
     renderContext.strokeStyle = "black";
     renderContext.fillStyle = "white";
-    renderContext.arc(point.x, point.y, size / 2, 0, Math.PI * 2, false);
+    renderContext.arc(point.x, point.y, numSize / 2, 0, Math.PI * 2, false);
     renderContext.stroke();
     renderContext.fill();
     renderContext.clip();
 
-    const fontSize = size * 0.8;
+    const fontSize = numSize * (this.health < 10 ? 0.8 : 0.7);
+
+    renderContext.textAlign = "center";
 
     this.map.renderTextByCoords(
-      point.x - (size / 2) + (fontSize / 4),
-      point.y - (size / 2) - (fontSize / 4),
+      point.x - (numSize / 2) + (fontSize / 2),
+      point.y - (numSize / 2),
       info,
       "black",
       fontSize
