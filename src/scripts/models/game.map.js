@@ -413,16 +413,20 @@ export default class GameMap extends Component {
       });
     });
 
-    const seatPos = this.config.points.seats.find(({ position }) => {
-      const location = positionToLocation(position, cellSize);
+    let seatPos = null;
 
-      return getCollisionInArea(x, y, {
-        x: location.x,
-        y: location.y,
-        width: cellSize,
-        height: cellSize,
+    if (window.debug.grid) {
+      seatPos = this.config.points.seats.find(({ position }) => {
+        const location = positionToLocation(position, cellSize);
+  
+        return getCollisionInArea(x, y, {
+          x: location.x,
+          y: location.y,
+          width: cellSize,
+          height: cellSize,
+        });
       });
-    });
+    }
 
     if (seatPos) {
       this.spawnCharacter({ path: [seatPos.position] });
