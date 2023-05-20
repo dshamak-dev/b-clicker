@@ -108,4 +108,8 @@ export default class Component {
   addStyle(key, value) {
     this.el?.style?.setProperty(key, value);
   }
+
+  remove() {
+    this.el?.remove();
+  }
 }

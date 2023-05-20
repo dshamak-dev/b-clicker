@@ -13,6 +13,7 @@ import { formatNumberOutput, isEqual } from "../utils/data.utils.js";
 import { getCollisionInArea, positionToLocation } from "../utils/grid.utils.js";
 import { getCurrentTheme } from "../utils/theme.utils.js";
 import { createThreshold, getStoreOpenState } from "../utils/time.utils.js";
+import BaristaCharacter from "./characters/barista.character.js";
 import HumanCharacter from "./characters/human.character.js";
 
 const SPAWN_DELAY = 5 * 1000;
@@ -158,6 +159,16 @@ export default class GameMap extends Component {
         }
       }
     });
+
+    if (!this.characters) {
+      this.characters = [];
+    }
+
+    this.characters.push(
+      new BaristaCharacter({
+        coordinates: this.config.points.stuff[0]?.position,
+      })
+    );
   }
 
   update() {
@@ -348,14 +359,20 @@ export default class GameMap extends Component {
       )
     );
 
-    const canEnter = this.characters?.length < this.maxCharacters && targetPoint != null;
+    const canEnter =
+      this.characters?.length < this.maxCharacters && targetPoint != null;
 
     if (!canEnter && character instanceof HumanCharacter) {
       this.game.possibleMoney.add(character.budget);
       character.destroy();
     }
 
-    if (!this.allowEnter || !canEnter || !targetPoint == null || character == null) {
+    if (
+      !this.allowEnter ||
+      !canEnter ||
+      !targetPoint == null ||
+      character == null
+    ) {
       return;
     }
 

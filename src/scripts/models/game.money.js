@@ -15,7 +15,7 @@ export default class GameMoney extends GameComponent {
   constructor(props) {
     super(Object.assign({
       sprite: {
-        url: '../../assets/icons.sprite.png'
+        url: './src/assets/icons.sprite.png'
       }
     }, props));
 

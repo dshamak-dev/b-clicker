@@ -4,6 +4,7 @@ const COLS = 10;
 export const MAP_CONFIG = {
   size: { cols: COLS, rows: ROWS },
   points: {
+    stuff: [{ position: { col: 8, row: 9 } }],
     seats: [
       // { position: { col: 2, row: 1 } },
       // { position: { col: 7, row: 1 } },
@@ -22,11 +23,11 @@ export const MAP_CONFIG = {
       { position: { col: 3, row: 18 } },
       { position: { col: 6, row: 18 } },
       // dog seats
-      { position: { col: 3, row: 16 }, characterLabels: ['dog'] },
-      { position: { col: 5, row: 15 }, characterLabels: ['dog'] },
-      { position: { col: 4, row: 8 }, characterLabels: ['dog'] },
-      { position: { col: 4, row: 4 }, characterLabels: ['dog'] },
-      { position: { col: 5, row: 4 }, characterLabels: ['dog'] },
+      { position: { col: 3, row: 16 }, characterLabels: ["dog"] },
+      { position: { col: 5, row: 15 }, characterLabels: ["dog"] },
+      { position: { col: 4, row: 8 }, characterLabels: ["dog"] },
+      { position: { col: 4, row: 4 }, characterLabels: ["dog"] },
+      { position: { col: 5, row: 4 }, characterLabels: ["dog"] },
     ],
     order: [
       { position: { col: 5, row: 9 } },

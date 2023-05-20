@@ -6,14 +6,13 @@ import {
   CHARACTER_GENDERS,
   CHARACTER_TYPES,
 } from "../../constants/game.const.js";
-import { getGame } from "../game.manager.js";
+import Component from "../components/component.js";
 import { getRandom } from "../utils/common.utils.js";
 import { clampValue, isEqual, min, toFixed } from "../utils/data.utils.js";
 import { getCollisionInArea, positionToLocation } from "../utils/grid.utils.js";
 import { createThreshold } from "../utils/time.utils.js";
 import GameComponent from "./game.component.js";
 import GameTime from "./game.time.js";
-import Sprite from "./sprite.js";
 
 export default class Character extends GameComponent {
   name;
@@ -538,11 +537,11 @@ export default class Character extends GameComponent {
 
     // if (atPoint) {
     //   console.info('at point');
-    // } 
+    // }
 
     // if (atPoint && isSeatOccupied) {
     //   console.info('at point');
-    // } 
+    // }
 
     // if (atPoint && !isMyPlace) {
     //   console.info('at point');
@@ -646,13 +645,37 @@ export default class Character extends GameComponent {
     renderContext.textAlign = "center";
 
     this.map.renderTextByCoords(
-      point.x - (numSize / 2) + (fontSize / 2),
-      point.y - (numSize / 2),
+      point.x - numSize / 2 + fontSize / 2,
+      point.y - numSize / 2,
       info,
       "black",
       fontSize
     );
 
     renderContext.restore();
+  }
+
+  renderComment() {
+    const parent = this.map;
+
+    if (!this.comment || !parent) {
+      this.commentEl.remove();
+      this.commentEl = null;
+      return;
+    }
+
+    const self = this;
+    if (this.commentEl == null) {
+      this.commentEl = new Component({
+        id: this.id,
+        observer: () => self.comment,
+      });
+
+      parent.append(this.commentEl);
+    }
+
+    this.commentEl.setStyle(
+      `position: absolute; top: ${this.location.y}px; left: ${this.location.x}px;`
+    );
   }
 }
