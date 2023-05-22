@@ -53,6 +53,8 @@ export default class GameComment {
       "style",
       `
       position: absolute;
+      max-width: 80vw;
+      max-width: calc(var(--screen-width) * 0.8);
       top: ${top}px; left: ${left}px;
       background: white;
       padding: 4px 2px;
@@ -60,7 +62,7 @@ export default class GameComment {
       `
     );
     this.el.setAttribute("data-text", text.trim());
-    // this.el.innerText = text.trim();
+    this.el.onclick = this.remove.bind(this);
 
     document.body.append(this.el);
 

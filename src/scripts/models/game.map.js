@@ -1,3 +1,7 @@
+import {
+  characterPrefabs,
+  characterType,
+} from "../../constants/character.const.js";
 import { CHARACTER_TYPES } from "../../constants/game.const.js";
 import { MAP_CONFIG } from "../../constants/map.const.js";
 import Canvas from "../components/canvas.js";
@@ -6,6 +10,7 @@ import { getGame } from "../game.manager.js";
 import { getRandomArrayItem } from "../utils/array.utils.js";
 import {
   createCharacter,
+  createCharacterFromPrefab,
   getCharacterTypeIdByLabel,
 } from "../utils/character.utils.js";
 import { getRandom } from "../utils/common.utils.js";
@@ -13,7 +18,7 @@ import { formatNumberOutput, isEqual } from "../utils/data.utils.js";
 import { getCollisionInArea, positionToLocation } from "../utils/grid.utils.js";
 import { getCurrentTheme } from "../utils/theme.utils.js";
 import { createThreshold, getStoreOpenState } from "../utils/time.utils.js";
-import BaristaCharacter from "./characters/barista.character.js";
+import BaristaCharacter from "./characters/worker.character.js";
 import HumanCharacter from "./characters/human.character.js";
 
 const SPAWN_DELAY = 5 * 1000;
@@ -85,7 +90,7 @@ export default class GameMap extends Component {
 
     this.config = Object.assign({}, MAP_CONFIG);
 
-    this.maxCharacters = this.config.points.seats.length * 2;
+    this.maxCharacters = Math.floor(this.config.points.seats.length * 1.5);
 
     this.bg = new Component({
       tagType: "img",
@@ -138,7 +143,7 @@ export default class GameMap extends Component {
 
       switch (e.key) {
         case "1": {
-          self.spawnCharacter();
+          self.spawnGuest();
           break;
         }
         case "2": {
@@ -164,9 +169,13 @@ export default class GameMap extends Component {
       this.characters = [];
     }
 
+    const workerPrefabs = characterPrefabs.filter(
+      (p) => p.type === characterType.worker
+    );
     this.characters.push(
       new BaristaCharacter({
         coordinates: this.config.points.stuff[0]?.position,
+        prefab: getRandomArrayItem(workerPrefabs),
       })
     );
   }
@@ -180,7 +189,7 @@ export default class GameMap extends Component {
 
     super.update();
 
-    this.spawnThreshold(this.spawnCharacter.bind(this), this.nextSpawnDelay);
+    // this.spawnThreshold(this.spawnCharacter.bind(this), this.nextSpawnDelay);
   }
 
   render() {
@@ -337,6 +346,30 @@ export default class GameMap extends Component {
     renderContext.fillText(`${col}-${row}`, x, y + 12);
   }
 
+  spawnGuest() {
+    const canEnter = this.characters?.length < this.maxCharacters;
+
+    if (!canEnter) {
+      return;
+    }
+
+    const guests = characterPrefabs.filter(
+      (p) => p.type === characterType.guest
+    );
+    const prefab = getRandomArrayItem(guests);
+    const spawnCoordinates = this.getRandomSpawnPosition();
+
+    const character = createCharacterFromPrefab(prefab, {
+      coordinates: { ...spawnCoordinates, row: 0 },
+    });
+
+    if (!character) {
+      return;
+    }
+
+    this.characters.push(character);
+  }
+
   spawnCharacter(props) {
     const type = getRandomArrayItem(Object.values(CHARACTER_TYPES));
     const position = this.getRandomSpawnPosition();
@@ -445,7 +478,7 @@ export default class GameMap extends Component {
     }
 
     if (seatPos) {
-      this.spawnCharacter({ path: [seatPos.position] });
+      // this.spawnCharacter({ path: [seatPos.position] });
     }
 
     if (doorOnPos) {

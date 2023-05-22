@@ -1,27 +1,27 @@
-import { getGame } from "../../game.manager.js";
-import { getRandomArrayItem } from "../../utils/array.utils.js";
-import { generateId } from "../../utils/data.utils.js";
-import GameComment from "../game.comment.js";
-import Sprite from "../sprite.js";
-import Vector from "../vector.js";
+import { characterStateType } from "../../constants/character.const.js";
+import { getGame } from "../game.manager.js";
+import { getRandomArrayItem } from "../utils/array.utils.js";
+import { generateId } from "../utils/data.utils.js";
+import Counter from "./counter.js";
+import GameComment from "./game.comment.js";
+import Sprite from "./sprite.js";
+import Vector from "./vector.js";
 
-const comments = [
-  "shalom",
-  "кукусики",
-  " попробуете фильтр на руанде?",
-  "добавить любви в напиток?",
-  "уматно!",
-  "не приходи без денег!",
-  "иди в трещину курицы с карточкой!",
-  "кэш или кэш"
-];
-
-export default class BaristaCharacter {
+export default class CharacterV2 {
+  prefab;
   coordinates;
   states;
+  targetCoordinates;
+
+  // private
+  _health;
+
+  get health() {
+    return this._health?.value || 0;
+  }
 
   get active() {
-    return true;
+    return this.states?.includes("active");
   }
 
   get position() {
@@ -59,7 +59,7 @@ export default class BaristaCharacter {
   }
 
   get color() {
-    return "white";
+    return this.prefab?.color || "white";
   }
 
   get sprite() {
@@ -82,52 +82,44 @@ export default class BaristaCharacter {
       offset: { x: tile.position.x * cellSize, y: tile.position.y * cellSize },
       tile,
     });
-    // const width = this.map?.cellSize;
-    // const height = this.map?.cellSize;
-    // const image = document.getElementById("characters-sprite");
-
-    // if (image == null) {
-    //   return null;
-    // }
-
-    // return Object.assign({}, this._sprite, {
-    //   image,
-    //   width: image.width,
-    //   height: image.height,
-
-    // });
   }
 
-  constructor({ coordinates, states, ...props }) {
-    Object.assign(this, {
-      id: generateId(4),
-    }, props, {
-      states: states || [],
-      coordinates: new Vector({
-        x: coordinates?.x || coordinates?.col,
-        y: coordinates?.y || coordinates?.row,
-        z: coordinates?.z,
-      }),
-    });
+  constructor({ coordinates, states, prefab, money, health, ...props }) {
+    Object.assign(
+      this,
+      {
+        id: generateId(4),
+      },
+      props,
+      {
+        prefab,
+        states: states || [],
+        coordinates: new Vector({
+          x: coordinates?.x || coordinates?.col,
+          y: coordinates?.y || coordinates?.row,
+          z: coordinates?.z,
+        }),
+      }
+    );
 
-    this._sprite = new Sprite({
-      url: "./src/assets/bundle.sprite.png",
-      tile: { size: 64, position: { x: 0, y: 2 } },
-    });
-  }
+    this._health = new Counter({ min: 0, value: health });
+    this._money = new Counter({ min: 0, value: money });
 
-  poke() {
-    console.info("poke");
-
-    const comment = this.getComment();
-
-    if (comment) {
-      this.say(comment);
+    if (prefab?.sprite) {
+      this._sprite = new Sprite(prefab?.sprite);
     }
   }
 
-  getComment() {
-    return getRandomArrayItem(comments);
+  json() {
+    const { id, prefab, coordinates, states, money, inventory, health } = this;
+
+    return { id, prefab, coordinates, states, money, inventory, health };
+  }
+
+  poke() {}
+
+  getRandomComment() {
+    return getRandomArrayItem(this.prefab?.comments || []);
   }
 
   update() {
@@ -141,13 +133,51 @@ export default class BaristaCharacter {
       text,
       position: {
         x: this.center.x,
-        y: this.center.y - this.height / 2
+        y: this.center.y - this.height / 2,
       },
     });
   }
 
+  goTo(vector) {
+    this.targetCoordinates = vector;
+
+    this.addStatus(characterStateType.walk);
+  }
+
+  hasStatus(status) {
+    return this.states?.includes(status);
+  }
+
+  toggleStatus(status) {
+    if (this.hasStatus(status)) {
+      this.removeStatus(status);
+    } else {
+      this.addStatus(status);
+    }
+  }
+
+  addStatus(status) {
+    if (!this.states) {
+      this.states = [];
+    }
+
+    this.states.push(status);
+  }
+
+  removeStatus(status) {
+    if (!this.states) {
+      return;
+    }
+
+    const index = this.states.findIndex((s) => s === status);
+
+    if (index !== -1) {
+      this.states.splice(index, 1);
+    }
+  }
+
   render() {
-    const { width, height } = this.dimensions;
+    const { width } = this.dimensions;
     const center = this.center;
 
     const renderContext = this.map.renderContext;
@@ -166,12 +196,7 @@ export default class BaristaCharacter {
 
     if (sprite) {
       renderContext.save();
-      // renderContext.beginPath();
-      // renderContext.strokeStyle = this.color;
-      // renderContext.fillStyle = this.color;
       renderContext.arc(center.x, center.y, width / 2, 0, Math.PI * 2, false);
-      // renderContext.stroke();
-      // renderContext.fill();
       renderContext.clip();
 
       renderContext.drawImage(

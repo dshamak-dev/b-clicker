@@ -28,8 +28,8 @@ export default class Counter {
     this._value = Math.min(Math.max(min || 0, nextValue), max);
   }
 
-  constructor({ max, min, loop }) {
-    this._value = min || 0;
+  constructor({ max, min = 0, loop, value }) {
+    this._value = Math.max(value || 0, min);
     this.loop = loop || false;
     this.min = min;
     this.max = max;
