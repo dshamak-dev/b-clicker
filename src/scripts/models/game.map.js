@@ -189,7 +189,7 @@ export default class GameMap extends Component {
 
     super.update();
 
-    // this.spawnThreshold(this.spawnCharacter.bind(this), this.nextSpawnDelay);
+    this.spawnThreshold(this.spawnCharacter.bind(this), this.nextSpawnDelay);
   }
 
   render() {
