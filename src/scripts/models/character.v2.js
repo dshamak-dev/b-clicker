@@ -135,13 +135,20 @@ export default class CharacterV2 {
   }
 
   say(text) {
-    new GameComment({
+    let self = this;
+
+    this.comment = new GameComment({
       sourceId: this.id,
-      source: this.map.el,
+      source: this.map?.canvas?.el,
       text,
       position: {
-        x: this.center.x,
-        y: this.center.y - this.height / 2,
+        x: self.center.x,
+        y: self.center.y - self.height / 2,
+      },
+      onDestroy: (id) => {
+        if (id === self.comment?.id) {
+          self.comment = null;
+        }
       },
     });
   }
@@ -197,7 +204,14 @@ export default class CharacterV2 {
 
   update() {
     if (this.hasStatus(characterStateType.move)) {
-      this.move(this.speed * 60 / 1000);
+      this.move((this.speed * 60) / 1000);
+    }
+
+    if (this.comment) {
+      this.comment.setPosition({
+        x: this.center.x,
+        y: this.center.y - this.height / 2,
+      });
     }
 
     this.render();

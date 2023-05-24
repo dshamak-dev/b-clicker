@@ -502,8 +502,12 @@ export default class GameMap extends Component {
   }
 
   getAllCharactersAtLocation({ x, y }) {
+    let characters = this.characters?.slice() || [];
+
+    characters = characters.concat(this.session?.characters || []);
+
     return (
-      this.characters?.filter((c) => {
+      characters?.filter((c) => {
         const res = getCollisionInArea(x, y, {
           ...c.location,
           width: c.width,

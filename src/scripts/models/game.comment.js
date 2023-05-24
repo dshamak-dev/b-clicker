@@ -25,13 +25,13 @@ export default class GameComment {
   id;
   text;
 
-  constructor({ sourceId, text, position, time = 4000, source }) {
+  constructor({ sourceId, text, position, time = 4000, source, onDestroy }) {
     const self = this;
     const id = Date.now();
 
     Object.assign(
       this,
-      { sourceId },
+      { sourceId, source, onDestroy },
       { text, position, time },
       {
         id,
@@ -44,10 +44,6 @@ export default class GameComment {
       }, time);
     }
 
-    const rect = source?.getBoundingClientRect() || { top: 0, left: 0 };
-    const top = position.y + rect.top;
-    const left = position.x + rect.left;
-
     this.el = document.createElement("div");
     this.el.setAttribute(
       "style",
@@ -55,12 +51,15 @@ export default class GameComment {
       position: absolute;
       max-width: 80vw;
       max-width: calc(var(--screen-width) * 0.8);
-      top: ${top}px; left: ${left}px;
+      top: 0; left: 0;
       background: white;
       padding: 4px 2px;
       border-radius: 2px;
       `
     );
+
+    this.setPosition(position);
+
     this.el.setAttribute("data-text", text.trim());
     this.el.onclick = this.remove.bind(this);
 
@@ -69,7 +68,20 @@ export default class GameComment {
     addComment(self);
   }
 
+  setPosition(position) {
+    const rect = this.source?.getBoundingClientRect() || { top: 0, left: 0 };
+    const top = position.y + rect.top;
+    const left = position.x + rect.left;
+
+    this.el.style.setProperty("top", `${top}px`);
+    this.el.style.setProperty("left", `${left}px`);
+  }
+
   remove() {
+    if (this.onDestroy) {
+      this.onDestroy(this.id);
+    }
+
     this.el.remove();
 
     remove(this.id);
