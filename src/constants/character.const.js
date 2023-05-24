@@ -13,7 +13,7 @@ export const CHARACTER_STATUSES = {
 
 export const characterStateType = {
   active: 1,
-  walk: 2,
+  move: 2,
   run: 3,
   seat: 4,
   work: 5,

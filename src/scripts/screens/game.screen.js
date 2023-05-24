@@ -48,6 +48,9 @@ export default class GameScreen extends ScreenComponent {
 
   show() {
     super.show();
+
+    this.map.init();
+
     this.game.speed.value = 2;
 
     this.update();

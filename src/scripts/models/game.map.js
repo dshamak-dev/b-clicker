@@ -44,6 +44,10 @@ export default class GameMap extends Component {
     return getGame();
   }
 
+  get session() {
+    return this.game?.session;
+  }
+
   get gridSize() {
     return this.config?.size || { cols: 0, rows: 0 };
   }
@@ -128,9 +132,7 @@ export default class GameMap extends Component {
 
     const self = this;
 
-    // this.config = Object.assign({ size: { cols: 12, rows: 36 } }, config);
     this.layers = [];
-    // this.characters = (characters || []).map((d) => new Character(d));
 
     if (getStoreOpenState()) {
       this.openDoors();
@@ -164,20 +166,12 @@ export default class GameMap extends Component {
         }
       }
     });
+  }
 
-    if (!this.characters) {
-      this.characters = [];
+  init() {
+    if (!this.session) {
+      this.game?.createSession();
     }
-
-    const workerPrefabs = characterPrefabs.filter(
-      (p) => p.type === characterType.worker
-    );
-    this.characters.push(
-      new BaristaCharacter({
-        coordinates: this.config.points.stuff[0]?.position,
-        prefab: getRandomArrayItem(workerPrefabs),
-      })
-    );
   }
 
   update() {
@@ -186,6 +180,8 @@ export default class GameMap extends Component {
     }
 
     this.characters?.forEach((c) => c.update());
+
+    this.session?.characters?.forEach((c) => c.update());
 
     super.update();
 
@@ -246,6 +242,7 @@ export default class GameMap extends Component {
 
     if (this.game.speed) {
       this.characters?.filter((c) => c.active)?.forEach((c) => c.render());
+      this.session?.characters?.forEach((c) => c.render());
     }
 
     if (window.debug?.grid) {
@@ -447,6 +444,12 @@ export default class GameMap extends Component {
 
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
+
+    const clickPosition = { x, y };
+    const clickCell = {
+      col: Math.floor(x / cellSize),
+      row: Math.floor(y / cellSize),
+    };
     // const { row, col, index } = this.getCellIndexByCoords(x, y);
 
     const characters = this.getAllCharactersAtLocation({ x, y });
@@ -487,6 +490,14 @@ export default class GameMap extends Component {
 
     if (characters) {
       characters.forEach((character) => character.poke());
+    }
+
+    const isFloorClick = !characters?.length && !seatPos && !doorOnPos;
+
+    if (isFloorClick) {
+      const barista = this.session?.getCharacter("barista");
+
+      barista?.goTo(clickPosition);
     }
   }
 

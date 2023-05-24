@@ -4,9 +4,9 @@ export const getMap = () => {
   return getGame()?.map;
 };
 
-export const getPath = (from, to) => {
+export const generatePath = (from, to) => {
   // todo: app points to avoid wall and object collissions
-  return [from, to];
+  return [to];
 };
 
 export const getClosestFreeSeats = () => {

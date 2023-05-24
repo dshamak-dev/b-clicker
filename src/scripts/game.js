@@ -1,8 +1,12 @@
+import { characterPrefabs, characterType } from "../constants/character.const.js";
 import Component from "./components/component.js";
+import WorkerCharacter from "./models/characters/worker.character.js";
 import Counter from "./models/counter.js";
 import GameMoney from "./models/game.money.js";
+import Session from "./models/session/session.js";
 import GameScreen from "./screens/game.screen.js";
 import LandingScreen from "./screens/landing.screen.js";
+import { getRandomArrayItem } from "./utils/array.utils.js";
 import {
   getPortraitOrientationState,
   getScreenSize,
@@ -18,6 +22,8 @@ export default class Game extends Component {
   activeScreenId = null;
 
   screens = [];
+
+  session;
 
   speed;
 
@@ -65,7 +71,7 @@ export default class Game extends Component {
       loop: true,
     });
     this.animalCounter = new Counter({
-      min: 0
+      min: 0,
     });
 
     this.init();
@@ -113,6 +119,24 @@ export default class Game extends Component {
     }
 
     targetScreen?.render();
+  }
+
+  createSession() {
+    const workerPrefabs = characterPrefabs.filter(
+      (p) => p.type === characterType.worker
+    );
+
+    const barista = new WorkerCharacter({
+      id: 'barista',
+      coordinates: { x: 0, y: 0 },
+      prefab: getRandomArrayItem(workerPrefabs),
+    })
+
+    this.session = new Session({
+      characters: [
+        barista,
+      ],
+    });
   }
 
   removeCharacter(id) {

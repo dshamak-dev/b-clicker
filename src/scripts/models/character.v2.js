@@ -1,7 +1,8 @@
 import { characterStateType } from "../../constants/character.const.js";
 import { getGame } from "../game.manager.js";
 import { getRandomArrayItem } from "../utils/array.utils.js";
-import { generateId } from "../utils/data.utils.js";
+import { clampValue, generateId, toFixed, min } from "../utils/data.utils.js";
+import { generatePath } from "../utils/map.utils.js";
 import Counter from "./counter.js";
 import GameComment from "./game.comment.js";
 import Sprite from "./sprite.js";
@@ -12,6 +13,8 @@ export default class CharacterV2 {
   coordinates;
   states;
   targetCoordinates;
+  speed;
+  path;
 
   // private
   _health;
@@ -48,6 +51,14 @@ export default class CharacterV2 {
 
   get dimensions() {
     return { width: this.map.cellSize, height: this.map.cellSize };
+  }
+
+  get targetCell() {
+    if (!this.path?.length) {
+      return null;
+    }
+
+    return this.path[0];
   }
 
   get game() {
@@ -89,14 +100,15 @@ export default class CharacterV2 {
       this,
       {
         id: generateId(4),
+        speed: 1,
       },
       props,
       {
         prefab,
         states: states || [],
         coordinates: new Vector({
-          x: coordinates?.x || coordinates?.col,
-          y: coordinates?.y || coordinates?.row,
+          x: coordinates?.x != null ? coordinates.x : coordinates?.col || 0,
+          y: coordinates?.y != null ? coordinates.y : coordinates?.row || 0,
           z: coordinates?.z,
         }),
       }
@@ -122,10 +134,6 @@ export default class CharacterV2 {
     return getRandomArrayItem(this.prefab?.comments || []);
   }
 
-  update() {
-    this.render();
-  }
-
   say(text) {
     new GameComment({
       sourceId: this.id,
@@ -139,9 +147,20 @@ export default class CharacterV2 {
   }
 
   goTo(vector) {
-    this.targetCoordinates = vector;
+    const cellSize = this.map?.cellSize;
 
-    this.addStatus(characterStateType.walk);
+    this.goToCell({
+      x: Math.floor(vector.x / cellSize),
+      y: Math.floor(vector.y / cellSize),
+    });
+  }
+
+  goToCell(cell) {
+    this.targetCoordinates = cell;
+
+    this.addStatus(characterStateType.move);
+
+    this.path = generatePath(this.coordinates, cell) || [];
   }
 
   hasStatus(status) {
@@ -174,6 +193,47 @@ export default class CharacterV2 {
     if (index !== -1) {
       this.states.splice(index, 1);
     }
+  }
+
+  update() {
+    if (this.hasStatus(characterStateType.move)) {
+      this.move(this.speed * 60 / 1000);
+    }
+
+    this.render();
+  }
+
+  move(speed = 1) {
+    const { coordinates, targetCell } = this;
+
+    if (!targetCell) {
+      return false;
+    }
+
+    const distance = {
+      x: targetCell.x - coordinates.x,
+      y: targetCell.y - coordinates.y,
+    };
+
+    if (!distance.x && !distance.y) {
+      this.path?.shift();
+
+      return true;
+    }
+
+    const direction = {
+      x: clampValue(distance.x, 1),
+      y: clampValue(distance.y, 1),
+    };
+
+    const dirAngle = toFixed(Math.atan2(direction.y, direction.x), 3);
+    let stepX = min(toFixed(Math.cos(dirAngle) * speed, 2), direction.x);
+    let stepY = min(toFixed(Math.sin(dirAngle) * speed, 2), direction.y);
+
+    this.coordinates = {
+      x: toFixed(coordinates.x + stepX, 2),
+      y: toFixed(coordinates.y + stepY, 2),
+    };
   }
 
   render() {
