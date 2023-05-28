@@ -9,12 +9,12 @@ export const generatePath = (from, to) => {
   return [to];
 };
 
-export const getClosestFreeSeats = () => {
+export const getClosestFreeSeats = (fromCell = null) => {
   const map = getMap();
 
   if (!map) {
-    return null;
+    return [];
   }
 
-  return [];
+  return map.seats.filter((it) => it.characterId == null);
 };

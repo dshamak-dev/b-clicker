@@ -1,4 +1,7 @@
-import { characterStateType } from "../../constants/character.const.js";
+import {
+  characterEvents,
+  characterStateType,
+} from "../../constants/character.const.js";
 import { getGame } from "../game.manager.js";
 import { getRandomArrayItem } from "../utils/array.utils.js";
 import { clampValue, generateId, toFixed, min } from "../utils/data.utils.js";
@@ -165,7 +168,9 @@ export default class CharacterV2 {
   goToCell(cell) {
     this.targetCoordinates = cell;
 
-    this.addStatus(characterStateType.move);
+    if (!this.hasStatus(characterStateType.move)) {
+      this.addStatus(characterStateType.move);
+    }
 
     this.path = generatePath(this.coordinates, cell) || [];
   }
@@ -213,8 +218,6 @@ export default class CharacterV2 {
         y: this.center.y - this.height / 2,
       });
     }
-
-    this.render();
   }
 
   move(speed = 1) {
@@ -231,7 +234,11 @@ export default class CharacterV2 {
 
     if (!distance.x && !distance.y) {
       this.path?.shift();
-
+      
+      this.stop();
+      this.on(characterEvents.point, {
+        cell: targetCell,
+      });
       return true;
     }
 
@@ -248,6 +255,16 @@ export default class CharacterV2 {
       x: toFixed(coordinates.x + stepX, 2),
       y: toFixed(coordinates.y + stepY, 2),
     };
+  }
+
+  stop() {
+    this.removeStatus(characterStateType.move);
+  }
+
+  on(type, props) {}
+
+  do(actionType, props) {
+    this.activeActionType = actionType;
   }
 
   render() {

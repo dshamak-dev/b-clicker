@@ -27,6 +27,24 @@ export const characterType = {
   worker: 3,
 };
 
+export const characterEvents = {
+  none: 0,
+  point: 1,
+};
+
+export const characterActionType = {
+  draft: undefined,
+  search: 1,
+  order: 2,
+  seat: 3,
+  work: 4,
+  talk: 5,
+  wait: 6,
+  leave: 7,
+  exit: 8,
+  decide: 9,
+};
+
 export const characterPrefabs = [
   {
     type: characterType.guest,

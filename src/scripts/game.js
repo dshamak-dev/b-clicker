@@ -43,6 +43,10 @@ export default class Game extends Component {
     return this.screens[1].map;
   }
 
+  get business() {
+    return this.session?.business;
+  }
+
   get gameSpeed() {
     return this.speed.value;
   }
@@ -139,16 +143,24 @@ export default class Game extends Component {
     });
   }
 
+  addCharacter(character) {
+    if (this.session == null || character == null) {
+      return null;
+    }
+
+    this.session.addCharacter(character);
+  }
+
   removeCharacter(id) {
-    if (id == null) {
+    if (this.session == null || id == null) {
       return;
     }
 
-    let characters = this.map.characters;
-    const index = characters?.findIndex((c) => c.id === id);
+    this.session.deleteCharacter(id);
+    // const index = characters?.findIndex((c) => c.id === id);
 
-    if (index >= 0) {
-      characters.splice(index, 1);
-    }
+    // if (index >= 0) {
+    //   characters.splice(index, 1);
+    // }
   }
 }

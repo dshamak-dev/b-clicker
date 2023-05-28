@@ -1,5 +1,8 @@
+import Cafe from "../business/cafe.js";
+
 export default class Session {
   active;
+  business;
   _characters;
 
   get characters() {
@@ -10,9 +13,11 @@ export default class Session {
     return characters;
   }
 
-  constructor({ characters = [], ...props }) {
+  constructor({ characters = [], business = {}, ...props }) {
     this.active = false;
     this._characters = new Map();
+
+    this.business = new Cafe(business);
 
     characters?.forEach(c => this.addCharacter(c));
   }

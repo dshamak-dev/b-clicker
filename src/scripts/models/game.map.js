@@ -20,6 +20,7 @@ import { getCurrentTheme } from "../utils/theme.utils.js";
 import { createThreshold, getStoreOpenState } from "../utils/time.utils.js";
 import BaristaCharacter from "./characters/worker.character.js";
 import HumanCharacter from "./characters/human.character.js";
+import GuestCharacter from "./characters/guest.character.js";
 
 const SPAWN_DELAY = 5 * 1000;
 
@@ -93,6 +94,29 @@ export default class GameMap extends Component {
     this.nextSpawnDelay = getRandom(SPAWN_DELAY, SPAWN_DELAY * 2);
 
     this.config = Object.assign({}, MAP_CONFIG);
+
+    this.seats = MAP_CONFIG.points.seats.map(({ position, ...other }) => ({
+      ...other,
+      position: { x: position.col, y: position.row },
+      characterId: null,
+    }));
+
+    this.config.locations = Object.entries(MAP_CONFIG.points).reduce(
+      (res, [key, values]) => {
+        const positions = values.reduce((all, { type, position }) => {
+          return {
+            ...all,
+            [JSON.stringify(position)]: type,
+          };
+        }, {});
+
+        return {
+          ...res,
+          ...positions,
+        };
+      },
+      {}
+    );
 
     this.maxCharacters = Math.floor(this.config.points.seats.length * 1.5);
 
@@ -172,6 +196,38 @@ export default class GameMap extends Component {
     if (!this.session) {
       this.game?.createSession();
     }
+  }
+
+  reserve(seatPos, characterId) {
+    if (seatPos == null || characterId == null) {
+      return false;
+    }
+
+    const { x, y } = seatPos;
+    const seat = this.seats.find((it) => isEqual(it.position, { x, y }));
+
+    if (seat == null) {
+      return false;
+    }
+
+    seat.characterId = characterId;
+
+    return true;
+  }
+
+  getCellInfo({ x, y }) {
+    const target = JSON.stringify({ col: x, row: y });
+    const entrie = Object.entries(this.config.locations).find(
+      ([key]) => key === target
+    );
+
+    if (entrie == null) {
+      return null;
+    }
+
+    const [pos, type] = entrie;
+
+    return { type };
   }
 
   update() {
@@ -368,45 +424,76 @@ export default class GameMap extends Component {
   }
 
   spawnCharacter(props) {
-    const type = getRandomArrayItem(Object.values(CHARACTER_TYPES));
-    const position = this.getRandomSpawnPosition();
-    const targetPoint = props?.path
-      ? props.path[0]
-      : this.getSeatPositionForCharacter(type)?.position;
+    const canEnter = this.characters?.length < this.maxCharacters;
 
-    const character = createCharacter(
-      type,
-      Object.assign(
-        {
-          position,
-          path: targetPoint ? [targetPoint] : [],
-          sprite: {
-            url: "./src/assets/characters.sprite.png",
-            image: this.charactersSprite.el,
-          },
-        },
-        props
-      )
-    );
-
-    const canEnter =
-      this.characters?.length < this.maxCharacters && targetPoint != null;
-
-    if (!canEnter && character instanceof HumanCharacter) {
-      this.game.possibleMoney.add(character.budget);
-      character.destroy();
-    }
-
-    if (
-      !this.allowEnter ||
-      !canEnter ||
-      !targetPoint == null ||
-      character == null
-    ) {
+    if (!canEnter) {
       return;
     }
 
-    this.characters.push(character);
+    const type = getRandomArrayItem(Object.values(CHARACTER_TYPES));
+
+    switch (type) {
+      case CHARACTER_TYPES.HUMAN:
+      default: {
+        const cell = this.getRandomSpawnPosition();
+
+        const guestPrefabs = characterPrefabs.filter(
+          (p) => p.type === characterType.guest
+        );
+        const prefab = getRandomArrayItem(guestPrefabs);
+
+        if (prefab == null) {
+          break;
+        }
+
+        this.game.addCharacter(
+          new GuestCharacter({
+            prefab,
+            coordinates: cell,
+          })
+        );
+
+        break;
+      }
+      // default: {
+      // const position = this.getRandomSpawnPosition();
+      // const targetPoint = props?.path
+      //   ? props.path[0]
+      //   : this.getSeatPositionForCharacter(type)?.position;
+
+      // const character = createCharacter(
+      //   type,
+      //   Object.assign(
+      //     {
+      //       position,
+      //       path: targetPoint ? [targetPoint] : [],
+      //       sprite: {
+      //         url: "./src/assets/characters.sprite.png",
+      //         image: this.charactersSprite.el,
+      //       },
+      //     },
+      //     props
+      //   )
+      // );
+
+      // if (!canEnter && character instanceof HumanCharacter) {
+      //   this.game.possibleMoney.add(character.budget);
+      //   character.destroy();
+      // }
+
+      // if (
+      //   !this.allowEnter ||
+      //   !canEnter ||
+      //   !targetPoint == null ||
+      //   character == null
+      // ) {
+      //   return;
+      // }
+
+      // this.characters.push(character);
+      //   break;
+      // }
+    }
 
     const sDelay = SPAWN_DELAY / this.gameSpeed;
     this.nextSpawnDelay = getRandom(sDelay, sDelay * 2);
@@ -619,7 +706,7 @@ export default class GameMap extends Component {
   }
 
   renderStats() {
-    const current = this.game.money.money;
+    const current = this.game?.business?.bank || 0;
     const possible = this.game.possibleMoney.money;
 
     const map = this;
