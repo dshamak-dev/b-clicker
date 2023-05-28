@@ -141,6 +141,7 @@ export default class GuestCharacter extends HumanCharacterV2 {
         if (seatCell == null) {
           console.warn("no seats found", this.json());
           this.do(characterActionType.exit);
+          this.say('net mest');
           return false;
         }
 
