@@ -1,3 +1,5 @@
+import { max, min } from "../utils/data.utils.js";
+
 const comments = [];
 
 const remove = (id) => {
@@ -25,7 +27,14 @@ export default class GameComment {
   id;
   text;
 
-  constructor({ sourceId, text, position, time = 4000, source, onDestroy }) {
+  constructor({
+    sourceId,
+    text,
+    position,
+    time = min(3000, text.length * 300),
+    source,
+    onDestroy,
+  }) {
     const self = this;
     const id = Date.now();
 
