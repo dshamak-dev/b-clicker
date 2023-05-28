@@ -1,4 +1,5 @@
 import { getRandom } from "../../utils/common.utils.js";
+import { max, min } from "../../utils/data.utils.js";
 
 export default class Business {
   history = [];
@@ -31,9 +32,9 @@ export default class Business {
     this.log("recieve", value);
   }
 
-  getOrderPrice() {
+  getOrderPrice(maxAmount = 55) {
     // todo: add menu
-    return getRandom(2, 55);
+    return max(2, min(getRandom(2, 55), maxAmount));
   }
 
   log(type, value) {

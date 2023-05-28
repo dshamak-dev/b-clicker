@@ -18,6 +18,7 @@ export const characterStateType = {
   seat: 4,
   work: 5,
   talk: 6,
+  order: 7,
 };
 
 export const characterType = {
@@ -43,6 +44,7 @@ export const characterActionType = {
   leave: 7,
   exit: 8,
   decide: 9,
+  pay: 10,
 };
 
 export const characterPrefabs = [

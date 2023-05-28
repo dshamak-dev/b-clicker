@@ -4,7 +4,6 @@ import {
   characterStateType,
 } from "../../../constants/character.const.js";
 import { mapPointType } from "../../../constants/map.const.js";
-import { getGame } from "../../game.manager.js";
 import { getRandomArrayItem } from "../../utils/array.utils.js";
 import { getRandom } from "../../utils/common.utils.js";
 import { getClosestFreeSeats } from "../../utils/map.utils.js";
@@ -26,21 +25,17 @@ export default class GuestCharacter extends HumanCharacterV2 {
       )
     );
 
-    const cell = getRandomArrayItem(this.map.config.points.order)?.position;
-
-    if (cell != null) {
-      this.goToCell({ x: cell.col, y: cell.row });
-    }
+    this.do(characterActionType.order);
   }
 
   poke() {
     /*
-      * order: resolve order (pay and get meal)
-      * seat / search: hit (loose health)
-    */
+     * order: resolve order (pay and get meal)
+     * seat / search: hit (loose health)
+     */
 
     if (this.hasStatus(characterStateType.order)) {
-      this.do(characterActionType.order);
+      this.do(characterActionType.pay);
       return true;
     }
 
@@ -54,6 +49,7 @@ export default class GuestCharacter extends HumanCharacterV2 {
   on(type, props) {
     super.on(type, props);
 
+    // events
     switch (type) {
       case characterEvents.point: {
         const cellInfo = this.map.getCellInfo(props.cell);
@@ -93,11 +89,18 @@ export default class GuestCharacter extends HumanCharacterV2 {
         }
         // wait for order resolve and say / show order icon
         // canOrder ? order : search
-        this.do(characterActionType.order);
+        this.startCooldown(characterActionType.order, 3000, () => {
+          this.do(characterActionType.search);
+        });
+        // this.do(characterActionType.order);
         break;
       }
       case mapPointType.seat: {
-        this.do(characterActionType.seat);
+        if (this.map.isFreeSeat(this.coordinates, this.id)) {
+          this.do(characterActionType.seat);
+        } else {
+          this.do(characterActionType.search);
+        }
         break;
       }
     }
@@ -112,6 +115,7 @@ export default class GuestCharacter extends HumanCharacterV2 {
       case characterActionType.exit: {
         // clear action states
         this.removeStatus(characterStateType.order);
+        this.map.leaveSeat(this.id);
 
         this.goToCell({ x: this.coordinates.x, y: -1 });
         break;
@@ -144,16 +148,35 @@ export default class GuestCharacter extends HumanCharacterV2 {
         break;
       }
       case characterActionType.action: {
+        const actionDuration = getRandom(3, 10) * 1000;
+
+        this.startCooldown(characterActionType.action, actionDuration, () => {
+          this.do(characterActionType.order);
+        });
         // random / condition [order, wait, work, talk] ? goToSeat : exit
         break;
       }
       case characterActionType.order: {
+        const cell = getRandomArrayItem(this.map.config.points.order)?.position;
+
+        if (cell != null) {
+          this.goToCell({ x: cell.col, y: cell.row });
+        } else {
+          this.do(characterActionType.exit);
+          return false;
+        }
+
+        break;
+      }
+      case characterActionType.pay: {
         this.removeStatus(characterStateType.order);
-        const payment = this.game.business?.getOrderPrice() || 0;
+        this.stopCooldown(characterActionType.order);
+
+        const payment = this.game.business?.getOrderPrice(this.money) || 0;
 
         if (this.money < payment) {
           console.warn("no money", { money: this.money, payment });
-          this.say('doraga!');
+          this.say("doraga!");
           this.do(characterActionType.exit);
           return false;
         }

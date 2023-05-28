@@ -9,6 +9,7 @@ import { generatePath } from "../utils/map.utils.js";
 import Counter from "./counter.js";
 import GameComment from "./game.comment.js";
 import Sprite from "./sprite.js";
+import Cooldown from "./cooldown.js";
 import Vector from "./vector.js";
 
 export default class CharacterV2 {
@@ -18,6 +19,7 @@ export default class CharacterV2 {
   targetCoordinates;
   speed;
   path;
+  cooldowns;
 
   // private
   _health;
@@ -119,6 +121,7 @@ export default class CharacterV2 {
 
     this._health = new Counter({ min: 0, value: health });
     this._money = new Counter({ min: 0, value: money });
+    this.cooldowns = {};
 
     if (prefab?.sprite) {
       this._sprite = new Sprite(prefab?.sprite);
@@ -208,6 +211,8 @@ export default class CharacterV2 {
   }
 
   update() {
+    this.updateCooldowns();
+
     if (this.hasStatus(characterStateType.move)) {
       this.move((this.speed * 60) / 1000);
     }
@@ -234,7 +239,7 @@ export default class CharacterV2 {
 
     if (!distance.x && !distance.y) {
       this.path?.shift();
-      
+
       this.stop();
       this.on(characterEvents.point, {
         cell: targetCell,
@@ -265,6 +270,22 @@ export default class CharacterV2 {
 
   do(actionType, props) {
     this.activeActionType = actionType;
+  }
+
+  startCooldown(name, duration, callback) {
+    const cooldown = new Cooldown({
+      duration,
+      callback,
+    });
+    this.cooldowns[name] = cooldown;
+
+    cooldown.start();
+  }
+  stopCooldown(name) {
+    delete this.cooldowns[name];
+  }
+  updateCooldowns() {
+    Object.values(this.cooldowns).forEach((it) => it.update());
   }
 
   render() {

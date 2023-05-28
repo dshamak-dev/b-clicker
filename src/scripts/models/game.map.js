@@ -215,6 +215,24 @@ export default class GameMap extends Component {
     return true;
   }
 
+  isFreeSeat(pos, characterId) {
+    const seat = this.seats.find((it) => isEqual(it.position, pos));
+
+    if (seat == null) {
+      return false;
+    }
+
+    return seat.characterId == null || seat.characterId === characterId;
+  }
+
+  leaveSeat(characterId) {
+    const seat = this.seats.find((it) => it.characterId === characterId);
+
+    if (seat != null) {
+      seat.characterId = null;
+    }
+  }
+
   getCellInfo({ x, y }) {
     const target = JSON.stringify({ col: x, row: y });
     const entrie = Object.entries(this.config.locations).find(
