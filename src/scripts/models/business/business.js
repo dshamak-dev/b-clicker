@@ -1,3 +1,4 @@
+import { getRandomArrayItem } from "../../utils/array.utils.js";
 import { getRandom } from "../../utils/common.utils.js";
 import { max, min } from "../../utils/data.utils.js";
 
@@ -18,6 +19,11 @@ export default class Business {
 
     this._bank = bank || 0;
     this.history = history ? history.slice() : [];
+    this.menu = [{
+      icon: '🥨',
+      title: 'krooton',
+      price: 100
+    }];
   }
 
   spend(value) {
@@ -32,9 +38,14 @@ export default class Business {
     this.log("recieve", value);
   }
 
-  getOrderPrice(maxAmount = 55) {
+  getOrderPrice(maxAmount = null) {
     // todo: add menu
-    return max(2, min(getRandom(2, 55), maxAmount));
+
+    const avaialble = this.menu.filter((it => {
+      return maxAmount == null || it.price < maxAmount;
+    }));
+
+    return getRandomArrayItem(avaialble);
   }
 
   log(type, value) {

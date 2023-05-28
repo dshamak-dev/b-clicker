@@ -55,3 +55,9 @@ export const max = (a, b) => {
 
   return Math.max(a, b);
 };
+
+export const getValueKey = (record, targetValue) => {
+  const entrie = Object.entries(record).find(([key, value]) => value === targetValue);
+
+  return entrie ? entrie[0] : null;
+};

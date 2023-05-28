@@ -3,7 +3,7 @@ import {
   characterType,
 } from "../../constants/character.const.js";
 import { CHARACTER_TYPES } from "../../constants/game.const.js";
-import { MAP_CONFIG } from "../../constants/map.const.js";
+import { MAP_CONFIG, mapPointType } from "../../constants/map.const.js";
 import Canvas from "../components/canvas.js";
 import Component from "../components/component.js";
 import { getGame } from "../game.manager.js";
@@ -14,13 +14,18 @@ import {
   getCharacterTypeIdByLabel,
 } from "../utils/character.utils.js";
 import { getRandom } from "../utils/common.utils.js";
-import { formatNumberOutput, isEqual } from "../utils/data.utils.js";
+import {
+  formatNumberOutput,
+  getValueKey,
+  isEqual,
+} from "../utils/data.utils.js";
 import { getCollisionInArea, positionToLocation } from "../utils/grid.utils.js";
 import { getCurrentTheme } from "../utils/theme.utils.js";
 import { createThreshold, getStoreOpenState } from "../utils/time.utils.js";
 import BaristaCharacter from "./characters/worker.character.js";
 import HumanCharacter from "./characters/human.character.js";
 import GuestCharacter from "./characters/guest.character.js";
+import Vector from "./vector.js";
 
 const SPAWN_DELAY = 5 * 1000;
 
@@ -198,6 +203,19 @@ export default class GameMap extends Component {
     }
   }
 
+  getAvailablePointByType(type, character) {
+    let pointKey = getValueKey(mapPointType, type);
+    let points = this.config.points[pointKey];
+
+    if (!points || !character) {
+      return [];
+    }
+
+    return points.filter((it) => {
+      return this.isEmptyPoint(it.position, character);
+    });
+  }
+
   reserve(seatPos, characterId) {
     if (seatPos == null || characterId == null) {
       return false;
@@ -213,6 +231,73 @@ export default class GameMap extends Component {
     seat.characterId = characterId;
 
     return true;
+  }
+
+  registerCharacterPosition(pos, characterId) {
+    if (!pos || characterId == null) {
+      return false;
+    }
+
+    if (!this.cells) {
+      this.cells = new Map();
+    }
+
+    let key = JSON.stringify(pos);
+    let value = this.cells.has(key) ? this.cells.get(key) : [];
+
+    if (!value.includes(characterId)) {
+      value.push(characterId);
+    }
+
+    this.cells.set(key, value);
+
+    return true;
+  }
+
+  clearCharacterPosition(pos, characterId) {
+    if (!pos || characterId == null || !this.cells) {
+      return false;
+    }
+
+    if (!this.cells) {
+      this.cells = new Map();
+    }
+
+    let key = JSON.stringify(pos);
+
+    if (!this.cells.has(key)) {
+      return false;
+    }
+
+    let value = this.cells.has(key) ? this.cells.get(key) : [];
+    let index = value.findIndex((id) => id === characterId);
+
+    if (index !== -1) {
+      value.splice(index, 1);
+    }
+
+    this.cells.set(key, value);
+
+    return true;
+  }
+
+  isEmptyPoint(position, character) {
+    if (!position) {
+      return false;
+    }
+
+    if (!this.cells) {
+      return true;
+    }
+
+    let key = JSON.stringify(Vector.normalize(position));
+    let value = this.cells.has(key) ? this.cells.get(key) : [];
+
+    return (
+      value.filter((id) => {
+        return !character ? true : id !== character.id;
+      }).length === 0
+    );
   }
 
   isFreeSeat(pos, characterId) {
@@ -233,7 +318,8 @@ export default class GameMap extends Component {
     }
   }
 
-  getCellInfo({ x, y }) {
+  getCellInfo(cellPosition) {
+    const { x, y } = Vector.normalize(cellPosition);
     const target = JSON.stringify({ col: x, row: y });
     const entrie = Object.entries(this.config.locations).find(
       ([key]) => key === target
@@ -244,8 +330,14 @@ export default class GameMap extends Component {
     }
 
     const [pos, type] = entrie;
+    let characterIds = [];
 
-    return { type };
+    if (this.cells) {
+      let key = JSON.stringify(cellPosition);
+      characterIds = this.cells.get(key) || [];
+    }
+
+    return { type, characterIds };
   }
 
   update() {
@@ -597,13 +689,13 @@ export default class GameMap extends Component {
       characters.forEach((character) => character.poke());
     }
 
-    const isFloorClick = !characters?.length && !seatPos && !doorOnPos;
+    // const isFloorClick = !characters?.length && !seatPos && !doorOnPos;
 
-    if (isFloorClick) {
-      const barista = this.session?.getCharacter("barista");
+    // if (isFloorClick) {
+    //   const barista = this.session?.getCharacter("barista");
 
-      barista?.goTo(clickPosition);
-    }
+    //   barista?.goTo(clickPosition);
+    // }
   }
 
   getAllCharactersAtLocation({ x, y }) {

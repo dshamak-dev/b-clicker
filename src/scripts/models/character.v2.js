@@ -140,13 +140,14 @@ export default class CharacterV2 {
     return getRandomArrayItem(this.prefab?.comments || []);
   }
 
-  say(text) {
+  say(text, time = undefined) {
     let self = this;
 
     this.comment = new GameComment({
       sourceId: this.id,
       source: this.map?.canvas?.el,
       text,
+      time,
       position: {
         x: self.center.x,
         y: self.center.y - self.height / 2,
@@ -169,6 +170,8 @@ export default class CharacterV2 {
   }
 
   goToCell(cell) {
+    this.map.clearCharacterPosition(this.coordinates, this.id);
+
     this.targetCoordinates = cell;
 
     if (!this.hasStatus(characterStateType.move)) {
@@ -266,7 +269,17 @@ export default class CharacterV2 {
     this.removeStatus(characterStateType.move);
   }
 
-  on(type, props) {}
+  on(type, props) {
+    switch (type) {
+      case characterEvents.point: {
+        this.map.registerCharacterPosition(this.coordinates, this.id);
+        break;
+      }
+      default: {
+        break;
+      }
+    }
+  }
 
   do(actionType, props) {
     this.activeActionType = actionType;

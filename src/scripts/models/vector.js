@@ -5,6 +5,13 @@ export default class Vector {
     Object.assign(this, { x, y, z });
   }
 
+  static normalize(pos) {
+    let x = pos.x != null ? pos.x : pos.col || 0;
+    let y = pos.y != null ? pos.y : pos.row || 0;
+
+    return { x, y };
+  }
+
   static moveTowards(v1, v2) {
     return {
       x: v1.x - v2.x,

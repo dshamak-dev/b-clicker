@@ -7,6 +7,7 @@ import { mapPointType } from "../../../constants/map.const.js";
 import { getRandomArrayItem } from "../../utils/array.utils.js";
 import { getRandom } from "../../utils/common.utils.js";
 import { getClosestFreeSeats } from "../../utils/map.utils.js";
+import Vector from "../vector.js";
 import HumanCharacterV2 from "./human.character.v2.js";
 
 export default class GuestCharacter extends HumanCharacterV2 {
@@ -84,12 +85,20 @@ export default class GuestCharacter extends HumanCharacterV2 {
 
     switch (point.type) {
       case mapPointType.order: {
+        if (!this.map.isEmptyPoint(this.coordinates, this)) {
+          this.do(characterActionType.order);
+          return false;
+        }
+
         if (!this.hasStatus(characterStateType.order)) {
           this.addStatus(characterStateType.order);
         }
         // wait for order resolve and say / show order icon
         // canOrder ? order : search
-        this.startCooldown(characterActionType.order, 3000, () => {
+        const waitTime = 3000;
+        this.say("⏳", waitTime);
+
+        this.startCooldown(characterActionType.order, waitTime, () => {
           this.do(characterActionType.search);
         });
         // this.do(characterActionType.order);
@@ -148,7 +157,7 @@ export default class GuestCharacter extends HumanCharacterV2 {
         break;
       }
       case characterActionType.action: {
-        const actionDuration = getRandom(3, 10) * 1000;
+        const actionDuration = getRandom(5, 20) * 1000;
 
         this.startCooldown(characterActionType.action, actionDuration, () => {
           this.do(characterActionType.order);
@@ -156,13 +165,20 @@ export default class GuestCharacter extends HumanCharacterV2 {
         // random / condition [order, wait, work, talk] ? goToSeat : exit
         break;
       }
+      // go to order point to make an order / reserve seat
       case characterActionType.order: {
-        const cell = getRandomArrayItem(this.map.config.points.order)?.position;
+        const availableOrderPoints = this.map
+          .getAvailablePointByType(mapPointType.order, this)
+          .map((it) => Vector.normalize(it.position));
 
-        if (cell != null) {
-          this.goToCell({ x: cell.col, y: cell.row });
+        const cellPosition = availableOrderPoints.sort((a, b) => {
+          return a.y > b.y ? 1 : -1;
+        })[0];
+
+        if (cellPosition != null) {
+          this.goToCell(cellPosition);
         } else {
-          this.do(characterActionType.exit);
+          this.do(characterActionType.search);
           return false;
         }
 
@@ -172,18 +188,18 @@ export default class GuestCharacter extends HumanCharacterV2 {
         this.removeStatus(characterStateType.order);
         this.stopCooldown(characterActionType.order);
 
-        const payment = this.game.business?.getOrderPrice(this.money) || 0;
+        const orderItem = this.game.business?.getOrderPrice(this.money);
 
-        if (this.money < payment) {
-          console.warn("no money", { money: this.money, payment });
+        if (orderItem == null || this.money < orderItem.price) {
+          console.warn("no money", { money: this.money, orderItem });
           this.say("doraga!");
           this.do(characterActionType.exit);
           return false;
         }
 
-        this.spend(payment);
-        this.say(`-${payment}`);
-        this.game?.business?.receive(payment);
+        this.spend(orderItem.price);
+        this.say(`${orderItem.icon} - ${orderItem.price}`);
+        this.game?.business?.receive(orderItem.price);
 
         this.do(characterActionType.search);
         break;

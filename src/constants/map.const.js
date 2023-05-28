@@ -58,9 +58,11 @@ export const MAP_CONFIG = {
       },
     ],
     order: [
+      { position: { col: 5, row: 8 }, type: mapPointType.order },
       { position: { col: 5, row: 9 }, type: mapPointType.order },
       { position: { col: 5, row: 10 }, type: mapPointType.order },
-      // { position: { col: 5, row: 11 }, type: mapPointType.order },
+      { position: { col: 5, row: 11 }, type: mapPointType.order },
+      { position: { col: 5, row: 12}, type: mapPointType.order },
     ],
     doors: [
       { position: { col: 4, row: 3 }, type: mapPointType.door },
