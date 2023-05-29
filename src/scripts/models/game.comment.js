@@ -64,6 +64,7 @@ export default class GameComment {
       background: white;
       padding: 4px 2px;
       border-radius: 2px;
+      pointer-events: none;
       `
     );
 

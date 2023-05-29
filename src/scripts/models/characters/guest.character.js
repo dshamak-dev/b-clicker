@@ -30,6 +30,7 @@ export default class GuestCharacter extends HumanCharacterV2 {
   }
 
   poke() {
+    super.poke();
     /*
      * order: resolve order (pay and get meal)
      * seat / search: hit (loose health)
@@ -125,23 +126,28 @@ export default class GuestCharacter extends HumanCharacterV2 {
         // clear action states
         this.removeStatus(characterStateType.order);
         this.map.leaveSeat(this.id);
+        this.forget("seatPosition");
 
         this.goToCell({ x: this.coordinates.x, y: -1 });
         break;
       }
       case characterActionType.search: {
         // hasSeat ? goToSeat : exit
-        const closestSeats = getClosestFreeSeats(this.coordinates).filter(
-          ({ characterLabels }) => {
-            return !characterLabels || characterLabels.includes("guest");
-          }
-        );
-        const seatCell = getRandomArrayItem(closestSeats || [])?.position;
+        let seatCell = this.remind("seatPosition");
+
+        if (!seatCell) {
+          const closestSeats = getClosestFreeSeats(this.coordinates).filter(
+            ({ characterLabels }) => {
+              return !characterLabels || characterLabels.includes("guest");
+            }
+          );
+          seatCell = getRandomArrayItem(closestSeats || [])?.position;
+        }
 
         if (seatCell == null) {
           console.warn("no seats found", this.json());
           this.do(characterActionType.exit);
-          this.say('net mest');
+          this.say("net mest");
           return false;
         }
 
@@ -151,6 +157,7 @@ export default class GuestCharacter extends HumanCharacterV2 {
       case characterActionType.seat: {
         this.addStatus(characterStateType.seat);
         this.map.reserve(this.coordinates, this.id);
+        this.remember("seatPosition", Vector.normalize(this.coordinates));
 
         // hasAction ? action : delay
         this.do(characterActionType.action);
@@ -161,7 +168,11 @@ export default class GuestCharacter extends HumanCharacterV2 {
         const actionDuration = getRandom(5, 20) * 1000;
 
         this.startCooldown(characterActionType.action, actionDuration, () => {
-          this.do(characterActionType.order);
+          if (this.money > 2) {
+            this.do(characterActionType.order);
+          } else {
+            this.do(characterActionType.exit);
+          }
         });
         // random / condition [order, wait, work, talk] ? goToSeat : exit
         break;

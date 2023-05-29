@@ -134,7 +134,11 @@ export default class CharacterV2 {
     return { id, prefab, coordinates, states, money, inventory, health };
   }
 
-  poke() {}
+  poke() {
+    if (this.comment) {
+      this.comment.remove();
+    }
+  }
 
   getRandomComment() {
     return getRandomArrayItem(this.prefab?.comments || []);
@@ -283,6 +287,26 @@ export default class CharacterV2 {
 
   do(actionType, props) {
     this.activeActionType = actionType;
+  }
+
+  remember(key, value) {
+    if (!this.memory) {
+      this.memory = new Map();
+    }
+
+    this.memory.set(key, value);
+  }
+
+  remind(key) {
+    return this.memory ? this.memory.get(key) : null;
+  }
+
+  forget(key) {
+    if (!this.memory || !this.memory.has(key)) {
+      return false;
+    }
+
+    this.memory.delete(key);
   }
 
   startCooldown(name, duration, callback) {

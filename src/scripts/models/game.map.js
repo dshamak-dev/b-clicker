@@ -27,7 +27,13 @@ import HumanCharacter from "./characters/human.character.js";
 import GuestCharacter from "./characters/guest.character.js";
 import Vector from "./vector.js";
 
-const SPAWN_DELAY = 5 * 1000;
+const SPAWN_DELAYS = [
+  15 * 1000,
+  10 * 1000,
+  5 * 1000,
+  8 * 1000,
+  15 * 1000
+];
 
 export default class GameMap extends Component {
   size;
@@ -94,9 +100,6 @@ export default class GameMap extends Component {
         }
       )
     );
-
-    this.spawnThreshold = createThreshold(SPAWN_DELAY);
-    this.nextSpawnDelay = getRandom(SPAWN_DELAY, SPAWN_DELAY * 2);
 
     this.config = Object.assign({}, MAP_CONFIG);
 
@@ -200,6 +203,9 @@ export default class GameMap extends Component {
   init() {
     if (!this.session) {
       this.game?.createSession();
+
+      this.spawnThreshold = createThreshold(3000);
+      this.nextSpawnDelay = 3000;
     }
   }
 
@@ -351,7 +357,24 @@ export default class GameMap extends Component {
 
     super.update();
 
-    this.spawnThreshold(this.spawnCharacter.bind(this), this.nextSpawnDelay);
+    if (this.spawnThreshold) {
+      this.spawnThreshold(() => {
+        const canEnter =
+          (this.session?.characters?.length || 0) < this.maxCharacters;
+        const isOpen = this.game?.business?.isOpen;
+  
+        if (isOpen && canEnter) {
+          this.spawnCharacter();
+        }
+  
+        const hour = new Date().getHours();
+        const dayPart = Math.floor(hour / 6);
+        const sDelay = SPAWN_DELAYS[dayPart] || SPAWN_DELAYS[0];
+        const delayMS = sDelay / this.gameSpeed;
+  
+        this.nextSpawnDelay = getRandom(delayMS, delayMS * 2);
+      }, this.nextSpawnDelay);
+    }
   }
 
   render() {
@@ -510,12 +533,6 @@ export default class GameMap extends Component {
   }
 
   spawnGuest() {
-    const canEnter = this.characters?.length < this.maxCharacters;
-
-    if (!canEnter) {
-      return;
-    }
-
     const guests = characterPrefabs.filter(
       (p) => p.type === characterType.guest
     );
@@ -604,9 +621,6 @@ export default class GameMap extends Component {
       //   break;
       // }
     }
-
-    const sDelay = SPAWN_DELAY / this.gameSpeed;
-    this.nextSpawnDelay = getRandom(sDelay, sDelay * 2);
   }
 
   getRandomSpawnPosition() {
@@ -809,10 +823,12 @@ export default class GameMap extends Component {
 
   openDoors() {
     this.allowEnter = true;
+    this.game.business?.open();
   }
 
   closeDoors() {
     this.allowEnter = false;
+    this.game.business?.close();
   }
 
   renderStats() {

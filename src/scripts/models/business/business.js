@@ -4,6 +4,7 @@ import { max, min } from "../../utils/data.utils.js";
 
 export default class Business {
   history = [];
+  isOpen;
   _bank;
 
   get bank() {
@@ -17,6 +18,7 @@ export default class Business {
   constructor({ bank, history, ...props }) {
     Object.assign(this, props);
 
+    this.isOpen = false;
     this._bank = bank || 0;
     this.history = history ? history.slice() : [];
     this.menu = [{
@@ -24,6 +26,14 @@ export default class Business {
       title: 'krooton',
       price: 100
     }];
+  }
+
+  open() {
+    this.isOpen = true;
+  }
+
+  close() {
+    this.isOpen = false;
   }
 
   spend(value) {
