@@ -166,10 +166,6 @@ export default class GameMap extends Component {
 
     this.layers = [];
 
-    if (getStoreOpenState()) {
-      this.openDoors();
-    }
-
     window.addEventListener("keydown", (e) => {
       if (!self.active) {
         return;
@@ -201,6 +197,10 @@ export default class GameMap extends Component {
   }
 
   init() {
+    if (getStoreOpenState()) {
+      this.openDoors();
+    }
+
     if (!this.session) {
       this.game?.createSession();
 
@@ -823,12 +823,12 @@ export default class GameMap extends Component {
 
   openDoors() {
     this.allowEnter = true;
-    this.game.business?.open();
+    this.game?.business?.open();
   }
 
   closeDoors() {
     this.allowEnter = false;
-    this.game.business?.close();
+    this.game?.business?.close();
   }
 
   renderStats() {
