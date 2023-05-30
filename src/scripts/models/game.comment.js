@@ -1,5 +1,7 @@
 import { max, min } from "../utils/data.utils.js";
 
+const rootEl = document.getElementById('root');
+
 const comments = [];
 
 const remove = (id) => {
@@ -70,10 +72,11 @@ export default class GameComment {
 
     this.setPosition(position);
 
+    this.el.classList.add('character_comment');
     this.el.setAttribute("data-text", text.trim());
     this.el.onclick = this.remove.bind(this);
 
-    document.body.append(this.el);
+    rootEl.append(this.el);
 
     addComment(self);
   }

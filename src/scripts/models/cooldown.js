@@ -5,10 +5,18 @@ export default class Cooldown {
   callback;
   active;
 
-  constructor({ duration, callback }) {
+  constructor({ sourceType, duration, actionType, callback }) {
     this.callback = callback;
+    this.actionType = actionType;
+    this.sourceType = sourceType;
     this.duration = duration || 0;
     this.time = duration;
+  }
+
+  json() {
+    const { sourceType, time, duration, actionType } = this;
+
+    return {sourceType, time, duration, actionType};
   }
 
   start() {

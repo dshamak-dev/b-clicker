@@ -1,4 +1,5 @@
 import {
+  characterActionType,
   characterPrefabs,
   characterType,
 } from "../../constants/character.const.js";
@@ -18,6 +19,7 @@ import {
   formatNumberOutput,
   getValueKey,
   isEqual,
+  mapToObject,
 } from "../utils/data.utils.js";
 import { getCollisionInArea, positionToLocation } from "../utils/grid.utils.js";
 import { getCurrentTheme } from "../utils/theme.utils.js";
@@ -27,15 +29,10 @@ import HumanCharacter from "./characters/human.character.js";
 import GuestCharacter from "./characters/guest.character.js";
 import Vector from "./vector.js";
 
-const SPAWN_DELAYS = [
-  15 * 1000,
-  10 * 1000,
-  5 * 1000,
-  8 * 1000,
-  15 * 1000
-];
+const SPAWN_DELAYS = [15 * 1000, 10 * 1000, 5 * 1000, 8 * 1000, 15 * 1000];
 
 export default class GameMap extends Component {
+  draft = true;
   size;
   config;
   // parts
@@ -85,7 +82,7 @@ export default class GameMap extends Component {
     return this.game.gameSpeed;
   }
 
-  constructor(props) {
+  constructor({ config, cells, ...props } = {}) {
     super(
       Object.assign(
         {
@@ -101,30 +98,42 @@ export default class GameMap extends Component {
       )
     );
 
-    this.config = Object.assign({}, MAP_CONFIG);
+    const _config = config || Object.assign({}, MAP_CONFIG);
 
-    this.seats = MAP_CONFIG.points.seats.map(({ position, ...other }) => ({
-      ...other,
-      position: { x: position.col, y: position.row },
-      characterId: null,
-    }));
+    this.config = _config;
 
-    this.config.locations = Object.entries(MAP_CONFIG.points).reduce(
-      (res, [key, values]) => {
-        const positions = values.reduce((all, { type, position }) => {
+    try {
+      this.cells = new Map(cells);
+    } catch (err) {
+      console.log(err);
+    }
+
+    if (!this.seats) {
+      this.seats = this.config.points.seats.map(({ position, ...other }) => ({
+        ...other,
+        position: { x: position.col, y: position.row },
+        characterId: null,
+      }));
+    }
+
+    if (!this.config.locations) {
+      this.config.locations = Object.entries(this.config.points).reduce(
+        (res, [key, values]) => {
+          const positions = values.reduce((all, { type, position }) => {
+            return {
+              ...all,
+              [JSON.stringify(position)]: type,
+            };
+          }, {});
+
           return {
-            ...all,
-            [JSON.stringify(position)]: type,
+            ...res,
+            ...positions,
           };
-        }, {});
-
-        return {
-          ...res,
-          ...positions,
-        };
-      },
-      {}
-    );
+        },
+        {}
+      );
+    }
 
     this.maxCharacters = Math.floor(this.config.points.seats.length * 1.5);
 
@@ -196,17 +205,31 @@ export default class GameMap extends Component {
     });
   }
 
-  init() {
+  async init() {
+    const self = this;
+
+    if (!this.game) {
+      return;
+    }
+
+    await this.game.startSession();
+
+    if (!this.spawnThreshold) {
+      this.spawnThreshold = createThreshold(3000);
+      this.nextSpawnDelay = 3000;
+    }
+
     if (getStoreOpenState()) {
       this.openDoors();
     }
 
-    if (!this.session) {
-      this.game?.createSession();
+    this.draft = false;
+  }
 
-      this.spawnThreshold = createThreshold(3000);
-      this.nextSpawnDelay = 3000;
-    }
+  json() {
+    const { seats, config, cells } = this;
+
+    return { seats, config, cells: mapToObject(cells) };
   }
 
   getAvailablePointByType(type, character) {
@@ -362,19 +385,46 @@ export default class GameMap extends Component {
         const canEnter =
           (this.session?.characters?.length || 0) < this.maxCharacters;
         const isOpen = this.game?.business?.isOpen;
-  
+
         if (isOpen && canEnter) {
-          this.spawnCharacter();
+          const _c = this.spawnCharacter();
+
+          this.game.save();
         }
-  
+
         const hour = new Date().getHours();
         const dayPart = Math.floor(hour / 6);
         const sDelay = SPAWN_DELAYS[dayPart] || SPAWN_DELAYS[0];
         const delayMS = sDelay / this.gameSpeed;
-  
+
         this.nextSpawnDelay = getRandom(delayMS, delayMS * 2);
       }, this.nextSpawnDelay);
     }
+  }
+
+  clean() {
+    this.validateSeats();
+  }
+
+  validateSeats() {
+    if (this.seats == null) {
+      return false;
+    }
+
+    const characters = this.session?.characters || [];
+    // const charactersNum = characters?.length || 0;
+    // const seatsTotal = this.config.points.seats.length;
+
+    const self = this;
+    const characterIdList = characters.map((it) => it.id);
+
+    Object.values(this.seats).forEach((it) => {
+      if (!characterIdList.includes(it.characterId)) {
+        self.leaveSeat(it.characterId);
+      }
+    });
+
+    return true;
   }
 
   render() {
@@ -573,12 +623,13 @@ export default class GameMap extends Component {
           break;
         }
 
-        this.game.addCharacter(
-          new GuestCharacter({
-            prefab,
-            coordinates: cell,
-          })
-        );
+        const _c = new GuestCharacter({
+          prefab,
+          coordinates: cell,
+        });
+        _c.do(characterActionType.order);
+
+        this.game.addCharacter(_c);
 
         break;
       }

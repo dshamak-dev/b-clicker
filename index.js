@@ -1,7 +1,7 @@
 import { createGame, getGame } from "./src/scripts/game.manager.js";
 
-(() => {
-  const game = createGame();
+(async () => {
+  const game = await createGame();
 
   window.debug = {
     collision: false,
@@ -43,7 +43,4 @@ import { createGame, getGame } from "./src/scripts/game.manager.js";
       toggleState(key);
     }
   });
-  window.addEventListener('dblclick', () => {
-    game.start();
-  })
 })();

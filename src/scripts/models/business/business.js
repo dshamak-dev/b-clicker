@@ -16,16 +16,20 @@ export default class Business {
   }
 
   constructor({ bank, history, ...props }) {
-    Object.assign(this, props);
+    Object.assign(this, { isOpen: false }, props);
 
-    this.isOpen = false;
     this._bank = bank || 0;
     this.history = history ? history.slice() : [];
-    this.menu = [{
-      icon: '🥨',
-      title: 'krooton',
-      price: 100
-    }];
+
+    if (!this.menu) {
+      this.menu = [
+        {
+          icon: "🥨",
+          title: "krooton",
+          price: 100,
+        },
+      ];
+    }
   }
 
   open() {
@@ -51,9 +55,9 @@ export default class Business {
   getOrderPrice(maxAmount = null) {
     // todo: add menu
 
-    const avaialble = this.menu.filter((it => {
+    const avaialble = this.menu.filter((it) => {
       return maxAmount == null || it.price < maxAmount;
-    }));
+    });
 
     return getRandomArrayItem(avaialble);
   }
@@ -67,8 +71,8 @@ export default class Business {
   }
 
   json() {
-    const { history = [], bank } = this;
+    const { history = [], bank, isOpen, menu } = this;
 
-    return { history, bank };
+    return { history, bank, isOpen, menu };
   }
 }

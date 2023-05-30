@@ -2,6 +2,7 @@ import {
   characterActionType,
   characterEvents,
   characterStateType,
+  characterType,
 } from "../../../constants/character.const.js";
 import { mapPointType } from "../../../constants/map.const.js";
 import { getRandomArrayItem } from "../../utils/array.utils.js";
@@ -25,8 +26,6 @@ export default class GuestCharacter extends HumanCharacterV2 {
         props
       )
     );
-
-    this.do(characterActionType.order);
   }
 
   poke() {
@@ -41,9 +40,9 @@ export default class GuestCharacter extends HumanCharacterV2 {
       return true;
     }
 
-    const comment = this.getRandomComment();
+    if (this.hasStatus(characterStateType.seat)) {
+      const comment = this.getRandomComment();
 
-    if (comment) {
       this.say(comment);
     }
   }
@@ -99,9 +98,11 @@ export default class GuestCharacter extends HumanCharacterV2 {
         const waitTime = 3000;
         this.say("⏳", waitTime);
 
-        this.startCooldown(characterActionType.order, waitTime, () => {
-          this.do(characterActionType.search);
-        });
+        this.startCooldown(
+          characterActionType.order,
+          waitTime,
+          characterActionType.search
+        );
         // this.do(characterActionType.order);
         break;
       }
@@ -125,7 +126,6 @@ export default class GuestCharacter extends HumanCharacterV2 {
       case characterActionType.exit: {
         // clear action states
         this.removeStatus(characterStateType.order);
-        this.map.leaveSeat(this.id);
         this.forget("seatPosition");
 
         this.goToCell({ x: this.coordinates.x, y: -1 });
@@ -133,7 +133,11 @@ export default class GuestCharacter extends HumanCharacterV2 {
       }
       case characterActionType.search: {
         // hasSeat ? goToSeat : exit
-        let seatCell = this.remind("seatPosition");
+        if (this.hasStatus(characterStateType.order)) {
+          this.removeStatus(characterStateType.order);
+        }
+
+        let seatCell = this.remind("seatPosition", true);
 
         if (!seatCell) {
           const closestSeats = getClosestFreeSeats(this.coordinates).filter(
@@ -167,13 +171,11 @@ export default class GuestCharacter extends HumanCharacterV2 {
       case characterActionType.action: {
         const actionDuration = getRandom(5, 20) * 1000;
 
-        this.startCooldown(characterActionType.action, actionDuration, () => {
-          if (this.money > 2) {
-            this.do(characterActionType.order);
-          } else {
-            this.do(characterActionType.exit);
-          }
-        });
+        this.startCooldown(
+          characterActionType.action,
+          actionDuration,
+          characterActionType.decide
+        );
         // random / condition [order, wait, work, talk] ? goToSeat : exit
         break;
       }
@@ -218,6 +220,11 @@ export default class GuestCharacter extends HumanCharacterV2 {
       }
       case characterActionType.decide: {
         // random / condition [order, action, leave]
+        if (this.money > 2) {
+          this.do(characterActionType.order);
+        } else {
+          this.do(characterActionType.exit);
+        }
         break;
       }
       default: {

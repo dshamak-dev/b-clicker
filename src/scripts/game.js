@@ -1,11 +1,17 @@
-import { characterPrefabs, characterType } from "../constants/character.const.js";
+import {
+  characterPrefabs,
+  characterType,
+} from "../constants/character.const.js";
 import Component from "./components/component.js";
+import GuestCharacter from "./models/characters/guest.character.js";
 import WorkerCharacter from "./models/characters/worker.character.js";
 import Counter from "./models/counter.js";
 import GameMoney from "./models/game.money.js";
 import Session from "./models/session/session.js";
+import Time from "./models/time.js";
 import GameScreen from "./screens/game.screen.js";
 import LandingScreen from "./screens/landing.screen.js";
+import { getSession, putGameData } from "./utils/api.js";
 import { getRandomArrayItem } from "./utils/array.utils.js";
 import {
   getPortraitOrientationState,
@@ -20,6 +26,8 @@ export default class Game extends Component {
   canvas = null;
 
   activeScreenId = null;
+
+  lastSessionId;
 
   screens = [];
 
@@ -51,10 +59,17 @@ export default class Game extends Component {
     return this.speed.value;
   }
 
-  constructor() {
+  constructor(props) {
     const rootEl = document.getElementById("root");
 
     super({ parent: rootEl });
+
+    this.lastSessionId = props?.lastSessionId;
+
+    this.saveTime = new Time({
+      ups: 60 / 1000,
+      callback: () => this.save(),
+    });
 
     this.setStyle(`
       position: relative;
@@ -66,6 +81,8 @@ export default class Game extends Component {
 
     window.addEventListener("resize", this.render.bind(this));
 
+    window.onbeforeunload = this.save.bind(this);
+
     this.money = new GameMoney();
     this.possibleMoney = new GameMoney();
 
@@ -76,16 +93,23 @@ export default class Game extends Component {
     });
     this.animalCounter = new Counter({
       min: 0,
+      value: props?.animals,
     });
 
-    this.init();
+    // if (props?.session) {
+    //   this.createSession(props.session);
+    // }
+
+    this.init(props);
   }
 
-  init() {
+  init(props) {
     this.screens = [
       new LandingScreen({ parent: this.el }),
-      new GameScreen({ parent: this.el }),
+      new GameScreen({ parent: this.el, map: props?.map }),
     ];
+
+    this.saveTime.start();
 
     this.update();
   }
@@ -97,6 +121,25 @@ export default class Game extends Component {
 
   update() {
     super.update();
+  }
+
+  save() {
+    const data = this.json();
+
+    if (this.session) {
+      this.session.save();
+    }
+
+    putGameData(data);
+  }
+
+  json() {
+    const sessionId = this.session?.id;
+    const version = this.version;
+    const history = this.history?.json() || null;
+    const map = this.map?.json() || null;
+
+    return { version, lastSessionId: sessionId, map, history };
   }
 
   render() {
@@ -125,22 +168,71 @@ export default class Game extends Component {
     targetScreen?.render();
   }
 
-  createSession() {
-    const workerPrefabs = characterPrefabs.filter(
-      (p) => p.type === characterType.worker
+  async startSession() {
+    let sessionData = undefined;
+
+    if (this.lastSessionId != null) {
+      sessionData = await getSession(this.lastSessionId);
+    }
+
+    this.createSession(sessionData);
+    this.map.clean();
+
+    return true;
+  }
+
+  createSession({ characters = [], ...other } = {}) {
+    let sessionData = Object.assign(
+      {
+        characters: [],
+      },
+      other
     );
 
-    const barista = new WorkerCharacter({
-      id: 'barista',
-      coordinates: { x: 0, y: 0 },
-      prefab: getRandomArrayItem(workerPrefabs),
-    })
+    if (!characters.length) {
+      const workerPrefabs = characterPrefabs.filter(
+        (p) => p.type === characterType.worker
+      );
 
-    this.session = new Session({
-      characters: [
-        barista,
-      ],
-    });
+      const barista = new WorkerCharacter({
+        id: "barista",
+        coordinates: { x: 0, y: 0 },
+        prefab: getRandomArrayItem(workerPrefabs),
+      });
+
+      const cell = getRandomArrayItem(this.map.config.points.stuff)?.position;
+
+      if (cell != null) {
+        barista.goToCell({ x: cell.col, y: cell.row });
+      }
+
+      sessionData.characters.push(barista);
+    } else {
+      characters?.forEach((it) => {
+        let _character;
+
+        switch (it?.type) {
+          case characterType.worker: {
+            _character = new WorkerCharacter(it);
+            break;
+          }
+          case characterType.guest: {
+            _character = new GuestCharacter(it);
+            break;
+          }
+          case characterType.dog:
+          default: {
+            console.warn("unknown character type", it);
+          }
+        }
+
+        if (_character) {
+          sessionData.characters.push(_character);
+        }
+      });
+    }
+
+    this.session = new Session(sessionData);
   }
 
   addCharacter(character) {
@@ -157,6 +249,8 @@ export default class Game extends Component {
     }
 
     this.session.deleteCharacter(id);
+
+    this.map.clean();
     // const index = characters?.findIndex((c) => c.id === id);
 
     // if (index >= 0) {

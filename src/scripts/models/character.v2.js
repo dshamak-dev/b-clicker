@@ -4,7 +4,15 @@ import {
 } from "../../constants/character.const.js";
 import { getGame } from "../game.manager.js";
 import { getRandomArrayItem } from "../utils/array.utils.js";
-import { clampValue, generateId, toFixed, min } from "../utils/data.utils.js";
+import {
+  clampValue,
+  generateId,
+  toFixed,
+  min,
+  mapToArray,
+  mapToObject,
+  objectToMap,
+} from "../utils/data.utils.js";
 import { generatePath } from "../utils/map.utils.js";
 import Counter from "./counter.js";
 import GameComment from "./game.comment.js";
@@ -100,7 +108,16 @@ export default class CharacterV2 {
     });
   }
 
-  constructor({ coordinates, states, prefab, money, health, ...props }) {
+  constructor({
+    coordinates,
+    states,
+    prefab,
+    money,
+    health,
+    cooldowns,
+    memory,
+    ...props
+  }) {
     Object.assign(
       this,
       {
@@ -110,6 +127,7 @@ export default class CharacterV2 {
       props,
       {
         prefab,
+        type: prefab?.type || props?.type,
         states: states || [],
         coordinates: new Vector({
           x: coordinates?.x != null ? coordinates.x : coordinates?.col || 0,
@@ -121,7 +139,17 @@ export default class CharacterV2 {
 
     this._health = new Counter({ min: 0, value: health });
     this._money = new Counter({ min: 0, value: money });
-    this.cooldowns = {};
+    this.cooldowns = new Map();
+
+    if (memory) {
+      this.memory = objectToMap(memory);
+    }
+
+    if (cooldowns) {
+      cooldowns.forEach((c) => {
+        this.startCooldown(c.sourceType, c.time, c.actionType);
+      });
+    }
 
     if (prefab?.sprite) {
       this._sprite = new Sprite(prefab?.sprite);
@@ -129,9 +157,34 @@ export default class CharacterV2 {
   }
 
   json() {
-    const { id, prefab, coordinates, states, money, inventory, health } = this;
+    const {
+      type,
+      id,
+      prefab,
+      coordinates,
+      states,
+      money,
+      inventory,
+      health,
+      path,
+      memory,
+    } = this;
 
-    return { id, prefab, coordinates, states, money, inventory, health };
+    const cooldowns = mapToArray(this.cooldowns).map((it) => it.json());
+
+    return {
+      id,
+      type,
+      prefab,
+      coordinates,
+      states,
+      money,
+      inventory,
+      health,
+      path,
+      cooldowns,
+      memory: mapToObject(memory),
+    };
   }
 
   poke() {
@@ -146,6 +199,10 @@ export default class CharacterV2 {
 
   say(text, time = undefined) {
     let self = this;
+
+    if (text == null) {
+      return false;
+    }
 
     this.comment = new GameComment({
       sourceId: this.id,
@@ -174,6 +231,7 @@ export default class CharacterV2 {
   }
 
   goToCell(cell) {
+    this.map.leaveSeat(this.id);
     this.map.clearCharacterPosition(this.coordinates, this.id);
 
     this.targetCoordinates = cell;
@@ -181,6 +239,10 @@ export default class CharacterV2 {
     if (!this.hasStatus(characterStateType.move)) {
       this.addStatus(characterStateType.move);
     }
+
+    [characterStateType.seat, characterStateType.order].forEach((s) =>
+      this.removeStatus(s)
+    );
 
     this.path = generatePath(this.coordinates, cell) || [];
   }
@@ -297,8 +359,14 @@ export default class CharacterV2 {
     this.memory.set(key, value);
   }
 
-  remind(key) {
-    return this.memory ? this.memory.get(key) : null;
+  remind(key, forget = false) {
+    const value = this.memory ? this.memory.get(key) : null;
+
+    if (forget) {
+      this.forget(key);
+    }
+
+    return value;
   }
 
   forget(key) {
@@ -309,20 +377,24 @@ export default class CharacterV2 {
     this.memory.delete(key);
   }
 
-  startCooldown(name, duration, callback) {
+  startCooldown(sourceType, duration, actionType) {
     const cooldown = new Cooldown({
+      sourceType,
       duration,
-      callback,
+      actionType,
+      callback: () => this.do(actionType),
     });
-    this.cooldowns[name] = cooldown;
+    this.cooldowns.set(sourceType, cooldown);
 
     cooldown.start();
   }
-  stopCooldown(name) {
-    delete this.cooldowns[name];
+  stopCooldown(sourceType) {
+    this.cooldowns.delete(sourceType);
   }
   updateCooldowns() {
-    Object.values(this.cooldowns).forEach((it) => it.update());
+    const cooldowns = mapToArray(this.cooldowns) || [];
+
+    cooldowns.forEach((it) => it.update());
   }
 
   render() {

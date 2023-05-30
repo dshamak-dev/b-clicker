@@ -15,7 +15,7 @@ export default class GameScreen extends ScreenComponent {
     return getGame();
   }
 
-  constructor(props) {
+  constructor({ map, ...props } = {}) {
     super(
       Object.assign({}, props, {
         className: "game-screen select-none",
@@ -26,9 +26,14 @@ export default class GameScreen extends ScreenComponent {
 
     this.nav = new Nav();
 
-    this.map = new GameMap({
-      style: "width 100%; height: 100%;",
-    });
+    this.map = new GameMap(
+      Object.assign(
+        {
+          style: "width 100%; height: 100%;",
+        },
+        map
+      )
+    );
 
     this.append(
       new Component({
@@ -49,7 +54,9 @@ export default class GameScreen extends ScreenComponent {
   show() {
     super.show();
 
-    this.map.init();
+    if (this.map.draft) {
+      this.map.init();
+    }
 
     this.game.speed.value = 2;
 
@@ -65,7 +72,7 @@ export default class GameScreen extends ScreenComponent {
         .request("screen")
         .then((w) => {
           self.wakeLock = w;
-          console.warn('request weblock');
+          console.warn("request weblock");
         })
         .catch((err) => {
           console.error(err);
@@ -85,9 +92,17 @@ export default class GameScreen extends ScreenComponent {
     if (self.wakeLock) {
       self.wakeLock.release().then(() => {
         self.wakeLock = null;
-        console.warn('release weblock');
+        console.warn("release weblock");
       });
     }
+
+    // hide active comments
+    const comments = document.querySelectorAll('.character_comment');
+    comments?.forEach((el) => {
+      el.style.setProperty('opacity', 0);
+    });
+
+    this.game?.save();
   }
 
   update() {

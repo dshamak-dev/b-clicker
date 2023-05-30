@@ -57,7 +57,39 @@ export const max = (a, b) => {
 };
 
 export const getValueKey = (record, targetValue) => {
-  const entrie = Object.entries(record).find(([key, value]) => value === targetValue);
+  const entrie = Object.entries(record).find(
+    ([key, value]) => value === targetValue
+  );
 
   return entrie ? entrie[0] : null;
+};
+
+export const mapToArray = (map) => {
+  if (map == null) {
+    return [];
+  }
+
+  return Array.from(map, ([key, value]) => value) || [];
+};
+
+export const mapToObject = (map) => {
+  if (map == null) {
+    return {};
+  }
+
+  const rec = {};
+
+  map.forEach((value, key) => {
+    rec[key] = value;
+  });
+
+  return rec;
+};
+
+export const objectToMap = (rec) => {
+  if (rec != null || !Object.keys(rec).length) {
+    return new Map();
+  }
+
+  return new Map(rec);
 };
