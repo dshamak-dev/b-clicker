@@ -137,6 +137,10 @@ export default class GuestCharacter extends HumanCharacterV2 {
           this.removeStatus(characterStateType.order);
         }
 
+        if (!this.game?.business?.isOpen) {
+          return this.do(characterActionType.exit);
+        }
+
         let seatCell = this.remind("seatPosition", true);
 
         if (!seatCell) {

@@ -1,6 +1,8 @@
 import Business from "./business.js";
 
 export default class Cafe extends Business {
+  startHour = 10;
+
   constructor(props) {
     super(props);
 

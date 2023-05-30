@@ -1,9 +1,12 @@
 import { getRandomArrayItem } from "../../utils/array.utils.js";
 import { getRandom } from "../../utils/common.utils.js";
 import { max, min } from "../../utils/data.utils.js";
+import { toDate } from "../../utils/date.utils.js";
 
 export default class Business {
   history = [];
+  startHour = 9;
+  closeHour = 20;
   isOpen;
   _bank;
 
@@ -74,5 +77,17 @@ export default class Business {
     const { history = [], bank, isOpen, menu } = this;
 
     return { history, bank, isOpen, menu };
+  }
+
+  update() {
+    if (this.isOpen) {
+      return;
+    }
+
+    const now = toDate();
+
+    if (now.hours >= this.startHour  && now.hours < this.closeHour) {
+      this.open();
+    }
   }
 }

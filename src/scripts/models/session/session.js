@@ -1,6 +1,12 @@
+import { characterPrefabs, characterType } from "../../../constants/character.const.js";
+import { getGame } from "../../game.manager.js";
 import { putSession } from "../../utils/api.js";
+import { getRandomArrayItem } from "../../utils/array.utils.js";
 import { generateId } from "../../utils/data.utils.js";
+import { toDate } from "../../utils/date.utils.js";
+import { createThreshold } from "../../utils/time.utils.js";
 import Cafe from "../business/cafe.js";
+import WorkerCharacter from "../characters/worker.character.js";
 
 export default class Session {
   startDate;
@@ -9,12 +15,19 @@ export default class Session {
   business;
   _characters;
 
+  dayUpdateThreshold;
+  daylightStrength = 1;
+
   get characters() {
     let characters = [];
 
     this._characters?.forEach((c) => characters.push(c));
 
     return characters;
+  }
+
+  get game() {
+    return getGame();
   }
 
   constructor({ characters = [], business = {}, ...props }) {
@@ -25,13 +38,15 @@ export default class Session {
     }
 
     if (this.startDate == null) {
-      this.startDate = Date.now();
+      this.startDate = new Date().toISOString();
     }
 
     this.active = false;
     this._characters = new Map();
 
     this.business = new Cafe(business);
+
+    this.dayUpdateThreshold = createThreshold(30 * 60 * 1000);
 
     characters?.forEach((c) => this.addCharacter(c));
   }
@@ -70,13 +85,72 @@ export default class Session {
 
   start() {
     this.active = true;
+    const hasWorker = this.characters.some(
+      (it) => it.type === characterType.worker
+    );
+
+    if (!hasWorker) {
+      const workerPrefabs = characterPrefabs.filter(
+        (p) => p.type === characterType.worker
+      );
+
+      const barista = new WorkerCharacter({
+        id: "barista",
+        coordinates: { x: 0, y: 0 },
+        prefab: getRandomArrayItem(workerPrefabs),
+      });
+
+      this.addCharacter(barista);
+
+      const cell = getRandomArrayItem(this.game.map.config.points.stuff)?.position;
+
+      if (cell != null) {
+        barista.goToCell({ x: cell.col, y: cell.row });
+      }
+    }
+
+    this.updateDaylight();
   }
 
   end() {
     this.active = false;
   }
 
-  update() {}
+  validate() {
+    const startDate = toDate(this.startDate);
+    const today = toDate();
+
+    if (
+      startDate.dayOfMonth !== today.dayOfMonth ||
+      startDate.month != today.month
+    ) {
+      this.end();
+      return false;
+    }
+
+    return true;
+  }
+
+  update() {
+    if (this.dayUpdateThreshold) {
+      this.dayUpdateThreshold(this.updateDaylight);
+    } 
+
+    this.business?.update();
+  }
+
+  updateDaylight() {
+    const now = toDate();
+    let strength = 1;
+
+    if (now.hours < this.business.startHour || now.hours > this.business.closeHour) {
+      let delta = now.hours % 12;
+
+      strength = delta / 12;
+    }
+
+    this.daylightStrength = strength;
+  }
 
   render() {}
 }

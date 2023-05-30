@@ -1,15 +1,12 @@
 import { WORKING_HOURS } from "../../constants/game.const.js";
-import { COLORS } from "../../constants/theme.const.js";
 import Component from "../components/component.js";
 import ScreenComponent from "../components/screen.component.js";
 import { getGame } from "../game.manager.js";
 import { getCurrentTheme } from "../utils/theme.utils.js";
-import { getStoreOpenState } from "../utils/time.utils.js";
-import GameScreen from "./game.screen.js";
 
 export default class LandingScreen extends ScreenComponent {
   get isOpen() {
-    return getStoreOpenState();
+    return this.game?.business?.isOpen;
   }
 
   constructor(props) {
@@ -62,11 +59,14 @@ export default class LandingScreen extends ScreenComponent {
           new Component({
             style: "text-align: right;",
             observer: () => {
-              const startTime = WORKING_HOURS[0];
+              // const openHours = this.game?.business?.startHour;
+              // const nextVisitLabel = openHours ? `at ${openHours}${openHours < 12 ? "AM" : "PM"}` : 'later';
 
-              return this.isOpen
-                ? "tap to play"
-                : `come back at ${startTime}${startTime < 12 ? "AM" : "PM"}`;
+              return this.isOpen ? "tap to play" : 'tap to reopen';
+
+              // return this.isOpen
+              //   ? "tap to play"
+              //   : `Closed. come back ${nextVisitLabel}`;
             },
           }),
         ],

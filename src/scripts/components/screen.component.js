@@ -55,11 +55,13 @@ export default class ScreenComponent extends Component {
     this.visible = true;
 
     this.update();
+    this.render();
   }
 
   hide() {
     this.visible = false;
 
     this.update();
+    this.render();
   }
 }

@@ -10,7 +10,6 @@ import Component from "../components/component.js";
 import { getGame } from "../game.manager.js";
 import { getRandomArrayItem } from "../utils/array.utils.js";
 import {
-  createCharacter,
   createCharacterFromPrefab,
   getCharacterTypeIdByLabel,
 } from "../utils/character.utils.js";
@@ -23,9 +22,7 @@ import {
 } from "../utils/data.utils.js";
 import { getCollisionInArea, positionToLocation } from "../utils/grid.utils.js";
 import { getCurrentTheme } from "../utils/theme.utils.js";
-import { createThreshold, getStoreOpenState } from "../utils/time.utils.js";
-import BaristaCharacter from "./characters/worker.character.js";
-import HumanCharacter from "./characters/human.character.js";
+import { createThreshold } from "../utils/time.utils.js";
 import GuestCharacter from "./characters/guest.character.js";
 import Vector from "./vector.js";
 
@@ -39,7 +36,10 @@ export default class GameMap extends Component {
   characters = [];
   canvasEl;
   spawnThreshold;
-  allowEnter = false;
+
+  get allowEnter() {
+    return this.game?.business?.isOpen;
+  }
 
   get screen() {
     return this?.game?.screens[1];
@@ -212,15 +212,11 @@ export default class GameMap extends Component {
       return;
     }
 
-    await this.game.startSession();
+    // await this.game.startSession();
 
     if (!this.spawnThreshold) {
       this.spawnThreshold = createThreshold(3000);
       this.nextSpawnDelay = 3000;
-    }
-
-    if (getStoreOpenState()) {
-      this.openDoors();
     }
 
     this.draft = false;
@@ -439,7 +435,7 @@ export default class GameMap extends Component {
 
     const theme = getCurrentTheme();
 
-    this.addStyle("filter", `grayscale(${this.allowEnter ? 0 : 1})`);
+    this.addStyle("filter", `grayscale(${this.session?.daylightStrength || 0})`);
 
     const cellSize = this.cellSize;
     const { cols, rows } = this.gridSize;
@@ -873,12 +869,10 @@ export default class GameMap extends Component {
   }
 
   openDoors() {
-    this.allowEnter = true;
     this.game?.business?.open();
   }
 
   closeDoors() {
-    this.allowEnter = false;
     this.game?.business?.close();
   }
 

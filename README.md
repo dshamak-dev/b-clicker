@@ -1,7 +1,7 @@
 # TODO
 1. Required 
   - add character comments grouped by event type
-  - session save / load
+  - update sprites, hide / show doors on business open state 
   - reset session on day start and save summary on day end
   - add animals (dogs) to the game
   - add build minification and public folder as destination

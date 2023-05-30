@@ -1,8 +1,8 @@
 import { COLORS } from "../../constants/theme.const.js";
-import { getStoreOpenState } from "./time.utils.js";
+import { getGame } from "../game.manager.js";
 
 export const getCurrentTheme = () => {
-  const isOpen = getStoreOpenState();
+  const isOpen = getGame()?.business?.isOpen;
 
   return COLORS[isOpen ? 'day' : 'night'];
 };

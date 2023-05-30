@@ -231,8 +231,8 @@ export default class CharacterV2 {
   }
 
   goToCell(cell) {
-    this.map.leaveSeat(this.id);
-    this.map.clearCharacterPosition(this.coordinates, this.id);
+    this.map?.leaveSeat(this.id);
+    this.map?.clearCharacterPosition(this.coordinates, this.id);
 
     this.targetCoordinates = cell;
 

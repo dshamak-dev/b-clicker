@@ -58,6 +58,10 @@ export default class GameScreen extends ScreenComponent {
       this.map.init();
     }
 
+    if (this.game.session && !this.game.session.active) {
+      this.game.session.start();
+    }
+
     this.game.speed.value = 2;
 
     this.update();
@@ -106,6 +110,10 @@ export default class GameScreen extends ScreenComponent {
   }
 
   update() {
+    if (!this.visible) {
+      return;
+    }
+
     super.update();
   }
 
