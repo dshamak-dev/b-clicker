@@ -19,6 +19,7 @@ import {
   getValueKey,
   isEqual,
   mapToObject,
+  objectToMap,
 } from "../utils/data.utils.js";
 import { getCollisionInArea, positionToLocation } from "../utils/grid.utils.js";
 import { getCurrentTheme } from "../utils/theme.utils.js";
@@ -102,11 +103,7 @@ export default class GameMap extends Component {
 
     this.config = _config;
 
-    try {
-      this.cells = new Map(cells);
-    } catch (err) {
-      console.log(err);
-    }
+    this.cells = objectToMap(cells);
 
     if (!this.seats) {
       this.seats = this.config.points.seats.map(({ position, ...other }) => ({

@@ -1,4 +1,7 @@
-import { characterPrefabs, characterType } from "../../../constants/character.const.js";
+import {
+  characterPrefabs,
+  characterType,
+} from "../../../constants/character.const.js";
 import { getGame } from "../../game.manager.js";
 import { putSession } from "../../utils/api.js";
 import { getRandomArrayItem } from "../../utils/array.utils.js";
@@ -102,7 +105,9 @@ export default class Session {
 
       this.addCharacter(barista);
 
-      const cell = getRandomArrayItem(this.game.map.config.points.stuff)?.position;
+      const cell = getRandomArrayItem(
+        this.game.map.config.points.stuff
+      )?.position;
 
       if (cell != null) {
         barista.goToCell({ x: cell.col, y: cell.row });
@@ -134,22 +139,26 @@ export default class Session {
   update() {
     if (this.dayUpdateThreshold) {
       this.dayUpdateThreshold(this.updateDaylight);
-    } 
+    }
 
     this.business?.update();
   }
 
   updateDaylight() {
-    const now = toDate();
+    const now = toDate(debug.time);
     let strength = 1;
 
-    if (now.hours < this.business.startHour || now.hours > this.business.closeHour) {
+    if (now.hours < this.business.startHour) {
       let delta = now.hours % 12;
+
+      strength = delta / 12;
+    } else if (now.hours > this.business.closeHour - 1) {
+      let delta = 12 - (now.hours % 12);
 
       strength = delta / 12;
     }
 
-    this.daylightStrength = strength;
+    this.daylightStrength = 1 - strength;
   }
 
   render() {}
