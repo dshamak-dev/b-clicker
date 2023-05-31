@@ -6,6 +6,7 @@ import { createGame, getGame } from "./src/scripts/game.manager.js";
   window.debug = {
     collision: false,
     grid: false,
+    game,
   };
 
   const toggleState = (key) => {

@@ -2,6 +2,7 @@ import {
   characterPrefabs,
   characterType,
 } from "../constants/character.const.js";
+import { TARGET_FPS } from "../constants/game.const.js";
 import Component from "./components/component.js";
 import GuestCharacter from "./models/characters/guest.character.js";
 import WorkerCharacter from "./models/characters/worker.character.js";
@@ -66,11 +67,6 @@ export default class Game extends Component {
 
     this.lastSessionId = props?.lastSessionId;
 
-    this.saveTime = new Time({
-      ups: 60 / 1000,
-      callback: () => this.tick(),
-    });
-
     this.setStyle(`
       position: relative;
       height: 100%;
@@ -99,17 +95,36 @@ export default class Game extends Component {
     });
 
     this.init(props);
+
+    document.addEventListener("visibilitychange", () => {
+      switch (document.visibilityState) {
+        case "hidden": {
+          this.screens[1].hide();
+          this.screens[0].show();
+          break;
+        }
+      }
+    });
   }
 
-  init(props) {
+  async init(props) {
     this.screens = [
       new LandingScreen({ parent: this.el }),
       new GameScreen({ parent: this.el, map: props?.map }),
     ];
 
-    this.saveTime.start();
+    await this.load();
 
-    this.load();
+    this.upsTime = new Time({
+      delay: 1000 / 30,
+      callback: () => {
+        this.update();
+      },
+    });
+    this.fpsTime = new Time({
+      delay: 1000 / TARGET_FPS,
+      callback: () => this.render(),
+    });
 
     this.update();
   }
@@ -121,6 +136,11 @@ export default class Game extends Component {
     if (this.session.business && !this.session.business.isOpen) {
       this.session.business.open();
     }
+
+    this.saveTime = new Time({
+      delay: 60 / 1000,
+      callback: () => this.tick(),
+    });
   }
 
   update() {

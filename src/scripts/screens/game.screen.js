@@ -4,6 +4,7 @@ import Nav from "../components/nav.js";
 import ScreenComponent from "../components/screen.component.js";
 import { getGame } from "../game.manager.js";
 import GameMap from "../models/game.map.js";
+import Time from "../models/time.js";
 import Timer from "../models/timer.js";
 import { createThreshold } from "../utils/time.utils.js";
 
@@ -22,7 +23,11 @@ export default class GameScreen extends ScreenComponent {
       })
     );
 
-    this.animationTimer = new Timer();
+    // this.animationTimer = new Timer();
+    this.animationTimer = new Time({
+      delay: 1000 / TARGET_FPS,
+      callback: () => this.tick()
+    });
 
     this.nav = new Nav();
 
@@ -62,11 +67,12 @@ export default class GameScreen extends ScreenComponent {
       this.game.session.start();
     }
 
-    this.game.speed.value = 2;
+    this.game.speed.value = 1;
 
     this.update();
 
-    this.animationTimer.start(this.tick.bind(this), 1000 / TARGET_FPS);
+    this.animationTimer.start();
+    // this.animationTimer.start(this.tick.bind(this), 1000 / TARGET_FPS);
     // this.tick();
 
     if (navigator.wakeLock !== null) {
@@ -127,16 +133,22 @@ export default class GameScreen extends ScreenComponent {
     this.time.update();
 
     const gameSpeed = this.game.gameSpeed;
-    const frameRate = Math.min(MAX_FPS, TARGET_FPS * gameSpeed);
-    const delay = 1000 / frameRate;
+    // const frameRate = Math.min(MAX_FPS, TARGET_FPS * gameSpeed);
+    // const delay = 1000 / frameRate;
 
-    this.threshold(() => {
-      if (gameSpeed) {
-        self.map.update();
-      }
+    if (gameSpeed) {
+      this.map.update();
+    }
 
-      self.el.setAttribute("frame-rate", this.time.fps);
-    }, delay);
+    self.el.setAttribute("frame-rate", this.time.fps);
+
+    // this.threshold(() => {
+    //   if (gameSpeed) {
+    //     self.map.update();
+    //   }
+
+    //   self.el.setAttribute("frame-rate", this.time.fps);
+    // }, delay);
 
     // if (this.visible) {
     //   window.requestAnimationFrame(this.tick.bind(this));

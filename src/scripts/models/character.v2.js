@@ -283,7 +283,9 @@ export default class CharacterV2 {
     this.updateCooldowns();
 
     if (this.hasStatus(characterStateType.move)) {
-      this.move((this.speed * 60) / 1000);
+      const factor = this.game.speed.value * this.game.upsTime.delta;
+
+      this.move(this.speed * factor);
     }
 
     if (this.comment) {
