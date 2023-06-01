@@ -6,7 +6,9 @@ export default class GameTime {
   startAt;
   lastUpdatedAt;
   updateRate;
-  fps;
+
+  static ups;
+  static fps;
 
   get delta() {
     return toFixed(TARGET_FPS / 1000, 2);

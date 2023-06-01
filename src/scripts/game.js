@@ -115,17 +115,6 @@ export default class Game extends Component {
 
     await this.load();
 
-    this.upsTime = new Time({
-      delay: 1000 / 30,
-      callback: () => {
-        this.update();
-      },
-    });
-    this.fpsTime = new Time({
-      delay: 1000 / TARGET_FPS,
-      callback: () => this.render(),
-    });
-
     this.update();
   }
 
@@ -133,14 +122,23 @@ export default class Game extends Component {
     this.screens[1].show();
     this.screens[0].hide();
 
-    if (this.session.business && !this.session.business.isOpen) {
-      this.session.business.open();
-    }
+    // if (this.session.business && !this.session.business.isOpen) {
+    //   this.map.openDoors();
+    // }
 
     this.saveTime = new Time({
       delay: 60 / 1000,
       callback: () => this.tick(),
     });
+  }
+
+  restart() {
+    if (this.session) {
+      this.session.end();
+      this.history.push(this.session.json());
+      this.session = null;
+      this.createSession();
+    }
   }
 
   update() {
@@ -149,9 +147,7 @@ export default class Game extends Component {
 
   tick() {
     if (this.session && !this.session.validate()) {
-      this.history.push(this.session.json());
-      this.session = null;
-      this.createSession();
+      this.restart();
     }
 
     this.session?.update();
@@ -177,6 +173,11 @@ export default class Game extends Component {
     }
 
     this.createSession(sessionData);
+
+    if (this.session && !this.session.validate()) {
+      this.restart();
+    }
+
     this.map.clean();
 
     this.render();

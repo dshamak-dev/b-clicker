@@ -19,11 +19,11 @@ export const getGameData = () => {
 export const getSessions = () => {
   const record = localStorage.getItem(sessionStorageKey);
 
-  return Promise.resolve(record ? JSON.parse(record) : []);
+  return Promise.resolve(record ? JSON.parse(record) || [] : []);
 };
 
 export const getSession = async (id) => {
-  const sessions = await getSessions();
+  const sessions = await getSessions().then((res) => res || []);
 
   return Promise.resolve(sessions.find((it) => it.id === id));
 };

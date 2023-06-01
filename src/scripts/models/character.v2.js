@@ -19,6 +19,8 @@ import GameComment from "./game.comment.js";
 import Sprite from "./sprite.js";
 import Cooldown from "./cooldown.js";
 import Vector from "./vector.js";
+import Time from "./time.js";
+import GameTime from "./game.time.js";
 
 export default class CharacterV2 {
   prefab;
@@ -283,7 +285,7 @@ export default class CharacterV2 {
     this.updateCooldowns();
 
     if (this.hasStatus(characterStateType.move)) {
-      const factor = this.game.speed.value * this.game.upsTime.delta;
+      const factor = this.game.speed.value * GameTime.ups?.delta;
 
       this.move(this.speed * factor);
     }

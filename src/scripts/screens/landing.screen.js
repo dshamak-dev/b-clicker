@@ -16,7 +16,23 @@ export default class LandingScreen extends ScreenComponent {
       })
     );
 
-    this.el.onclick = this.handleClick.bind(this);
+    const btnStyle = `font-size: 2rem;`;
+
+    const continueBtn = (this.continueBtn = new Component({
+      style: btnStyle,
+      observer: () => "tap to start",
+      onClick: () => getGame()?.start(),
+    }));
+    const restartBtn = (this.restartBtn = new Component({
+      style: btnStyle,
+      observer: () => (getGame()?.session ? "start new" : "tap to start"),
+      onClick: () => {
+        const game = getGame();
+
+        game?.restart();
+        game?.start();
+      },
+    }));
 
     this.append(
       new Component({
@@ -57,31 +73,15 @@ export default class LandingScreen extends ScreenComponent {
             fitFont: true,
           }),
           new Component({
-            style: "text-align: right;",
-            observer: () => {
-              // const openHours = this.game?.business?.startHour;
-              // const nextVisitLabel = openHours ? `at ${openHours}${openHours < 12 ? "AM" : "PM"}` : 'later';
-
-              return this.isOpen ? "tap to play" : 'tap to reopen';
-
-              // return this.isOpen
-              //   ? "tap to play"
-              //   : `Closed. come back ${nextVisitLabel}`;
-            },
+            style:
+              "text-align: right; display: flex; flex-direction: column; gap: 2em;",
+            children: [continueBtn, restartBtn],
           }),
         ],
       })
     );
 
     this.render();
-  }
-
-  handleClick() {
-    // if (!this.isOpen) {
-    //   return;
-    // }
-
-    getGame()?.start();
   }
 
   render() {
@@ -93,5 +93,16 @@ export default class LandingScreen extends ScreenComponent {
     this.addStyle("--border-color", currentTheme.border);
     this.addStyle("background-color", currentTheme?.bg);
     this.addStyle("color", currentTheme?.text);
+
+    if (this.restartBtn) {
+      this.restartBtn.addStyle(
+        "display",
+        `${
+          getGame()?.session == null || getGame().session.draft
+            ? "none"
+            : "block"
+        }`
+      );
+    }
   }
 }

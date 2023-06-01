@@ -25,6 +25,7 @@ import { getCollisionInArea, positionToLocation } from "../utils/grid.utils.js";
 import { getCurrentTheme } from "../utils/theme.utils.js";
 import { createThreshold } from "../utils/time.utils.js";
 import GuestCharacter from "./characters/guest.character.js";
+import DoorObject from "./objects/door.object.js";
 import Vector from "./vector.js";
 
 const SPAWN_DELAYS = [15 * 1000, 10 * 1000, 5 * 1000, 8 * 1000, 15 * 1000];
@@ -37,6 +38,7 @@ export default class GameMap extends Component {
   characters = [];
   canvasEl;
   spawnThreshold;
+  doors;
 
   get allowEnter() {
     return this.game?.business?.isOpen;
@@ -83,7 +85,7 @@ export default class GameMap extends Component {
     return this.game.gameSpeed;
   }
 
-  constructor({ config, cells, ...props } = {}) {
+  constructor({ config, cells, doors, ...props } = {}) {
     super(
       Object.assign(
         {
@@ -104,6 +106,16 @@ export default class GameMap extends Component {
     this.config = _config;
 
     this.cells = objectToMap(cells);
+
+    this.doors = (
+      doors ||
+      this.config.points.doors.map(({ position }, i) => {
+        return {
+          direction: i % 2 ? -1 : 1,
+          position: Vector.normalize(position),
+        };
+      })
+    ).map((it) => new DoorObject(it));
 
     if (!this.seats) {
       this.seats = this.config.points.seats.map(({ position, ...other }) => ({
@@ -209,7 +221,7 @@ export default class GameMap extends Component {
       return;
     }
 
-    // await this.game.startSession();
+    this.doors.forEach((it) => (it.open = this.game?.business?.isOpen));
 
     if (!this.spawnThreshold) {
       this.spawnThreshold = createThreshold(3000);
@@ -220,9 +232,14 @@ export default class GameMap extends Component {
   }
 
   json() {
-    const { seats, config, cells } = this;
+    const { seats, config, cells, doors } = this;
 
-    return { seats, config, cells: mapToObject(cells) };
+    return {
+      seats,
+      config,
+      cells: mapToObject(cells),
+      doors: doors?.map((it) => it.json()),
+    };
   }
 
   getAvailablePointByType(type, character) {
@@ -432,7 +449,10 @@ export default class GameMap extends Component {
 
     const theme = getCurrentTheme();
 
-    this.addStyle("filter", `grayscale(${this.session?.daylightStrength || 0})`);
+    this.addStyle(
+      "filter",
+      `grayscale(${this.session?.daylightStrength || 0})`
+    );
 
     const cellSize = this.cellSize;
     const { cols, rows } = this.gridSize;
@@ -471,6 +491,12 @@ export default class GameMap extends Component {
     if (window.debug?.seats) {
       this.renderSeats();
     }
+
+    this.doors.forEach((it) => {
+      if (!it.open) {
+        this.renderObjectSprite(it.position, it.sprite);
+      }
+    });
 
     if (this.game.speed) {
       this.characters?.filter((c) => c.active)?.forEach((c) => c.render());
@@ -530,6 +556,42 @@ export default class GameMap extends Component {
     const y = row * cellSize;
 
     this.renderObjectByCoords(x, y, color);
+  }
+
+  renderObjectSprite(position, sprite) {
+    if (!position || !sprite) {
+      return false;
+    }
+    const renderContext = this.renderContext;
+
+    const cellSize = this.cellSize;
+    const offset = {
+      x: sprite.tile.position.x * cellSize,
+      y: sprite.tile.position.y * cellSize,
+    };
+    const x = position.x * cellSize;
+    const y = position.y * cellSize;
+
+    const spriteWidth = sprite.proportion.width * cellSize;
+    const spriteHeight = sprite.proportion.height * cellSize;
+
+    renderContext.save();
+    renderContext.beginPath();
+    renderContext.rect(x, y, cellSize, cellSize);
+
+    renderContext.clip();
+
+    renderContext.drawImage(
+      sprite.image,
+      x - offset.x,
+      y - offset.y,
+      spriteWidth,
+      spriteHeight
+    );
+
+    renderContext.restore();
+
+    return true;
   }
 
   renderObjectByCoords(x, y, color) {
@@ -867,10 +929,12 @@ export default class GameMap extends Component {
 
   openDoors() {
     this.game?.business?.open();
+    this.doors.forEach((it) => (it.open = true));
   }
 
   closeDoors() {
     this.game?.business?.close();
+    this.doors.forEach((it) => (it.open = false));
   }
 
   renderStats() {

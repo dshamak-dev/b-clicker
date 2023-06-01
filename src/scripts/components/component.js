@@ -26,12 +26,16 @@ export default class Component {
     return getGame();
   }
 
-  constructor({ children = [], ...props } = { children: [] }) {
+  constructor({ children = [], onClick, ...props } = { children: [] }) {
     Object.assign(this, { fitFont: false }, props);
 
     this.time = new GameTime();
 
     this.el = document.createElement(this.tagType);
+
+    if (onClick) {
+      this.el.onclick = onClick;
+    }
 
     if (this.id != null) {
       this.el.setAttribute("id", this.id);

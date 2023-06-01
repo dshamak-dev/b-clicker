@@ -14,12 +14,18 @@ import WorkerCharacter from "../characters/worker.character.js";
 export default class Session {
   startDate;
   id;
+  lastUpdateAt;
   active;
+  done = false;
   business;
   _characters;
 
   dayUpdateThreshold;
   daylightStrength = 1;
+
+  get draft() {
+    return this.lastUpdateAt == null;
+  }
 
   get characters() {
     let characters = [];
@@ -59,10 +65,12 @@ export default class Session {
   }
 
   json() {
-    const { id, business, characters, startDate } = this;
+    const { id, business, characters, startDate, done, lastUpdateAt } = this;
 
     return {
       id,
+      done,
+      lastUpdateAt,
       startDate,
       business: business?.json(),
       characters: characters?.map((it) => it.json()),
@@ -88,6 +96,9 @@ export default class Session {
 
   start() {
     this.active = true;
+
+    this.lastUpdateAt = new Date().toISOString();
+
     const hasWorker = this.characters.some(
       (it) => it.type === characterType.worker
     );
@@ -119,9 +130,14 @@ export default class Session {
 
   end() {
     this.active = false;
+    this.done = true;
   }
 
   validate() {
+    if (this.done) {
+      return false;
+    }
+
     const startDate = toDate(this.startDate);
     const today = toDate();
 
@@ -137,6 +153,8 @@ export default class Session {
   }
 
   update() {
+    this.lastUpdateAt = new Date().toISOString();
+
     if (this.dayUpdateThreshold) {
       this.dayUpdateThreshold(this.updateDaylight);
     }

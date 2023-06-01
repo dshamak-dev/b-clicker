@@ -4,6 +4,7 @@ import Nav from "../components/nav.js";
 import ScreenComponent from "../components/screen.component.js";
 import { getGame } from "../game.manager.js";
 import GameMap from "../models/game.map.js";
+import GameTime from "../models/game.time.js";
 import Time from "../models/time.js";
 import Timer from "../models/timer.js";
 import { createThreshold } from "../utils/time.utils.js";
@@ -53,7 +54,18 @@ export default class GameScreen extends ScreenComponent {
       })
     );
 
-    this.threshold = createThreshold(1000 / TARGET_FPS);
+    // this.threshold = createThreshold(1000 / TARGET_FPS);
+
+    GameTime.ups = new Time({
+      delay: 1000 / 30,
+      callback: () => {
+        this.update();
+      },
+    });
+    GameTime.fps = new Time({
+      delay: 1000 / TARGET_FPS,
+      callback: () => this.render(),
+    });
   }
 
   show() {
@@ -68,6 +80,9 @@ export default class GameScreen extends ScreenComponent {
     }
 
     this.game.speed.value = 1;
+
+    GameTime.ups.start();
+    GameTime.fps.start();
 
     this.update();
 
@@ -92,7 +107,13 @@ export default class GameScreen extends ScreenComponent {
 
   hide() {
     super.hide();
+
+    GameTime.ups.stop();
+    GameTime.fps.stop();
+
     this.game.speed.value = 0;
+
+
     this.update();
 
     this.animationTimer.stop();

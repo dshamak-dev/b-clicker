@@ -1,4 +1,5 @@
 export default class Time {
+  active;
   countdown;
   interval;
 
@@ -6,12 +7,14 @@ export default class Time {
     return 1 / this.delay;
   }
 
-  constructor({ delay = 1000, callback }) {
+  constructor({ delay = 1000, callback, autostart = false }) {
     this.delay = delay;
 
     this.callback = callback;
 
-    this.start();
+    if (autostart) {
+      this.start();
+    }
   }
 
   start() {
