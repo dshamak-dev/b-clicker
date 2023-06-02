@@ -79,6 +79,10 @@ export default class GameScreen extends ScreenComponent {
       this.game.session.start();
     }
 
+    if (!this.game?.business?.isOpen) {
+      this.map.openDoors();
+    }
+
     this.game.speed.value = 1;
 
     GameTime.ups.start();
@@ -86,7 +90,7 @@ export default class GameScreen extends ScreenComponent {
 
     this.update();
 
-    this.animationTimer.start();
+    // this.animationTimer.start();
     // this.animationTimer.start(this.tick.bind(this), 1000 / TARGET_FPS);
     // this.tick();
 
@@ -116,7 +120,10 @@ export default class GameScreen extends ScreenComponent {
 
     this.update();
 
-    this.animationTimer.stop();
+    // this.animationTimer.stop();
+    if (this.game?.business?.isOpen) {
+      this.map.closeDoors();
+    }
 
     const self = this;
 
@@ -142,6 +149,7 @@ export default class GameScreen extends ScreenComponent {
     }
 
     super.update();
+    this.tick();
   }
 
   render() {

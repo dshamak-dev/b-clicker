@@ -4,6 +4,7 @@ import {
 } from "../constants/character.const.js";
 import { TARGET_FPS } from "../constants/game.const.js";
 import Component from "./components/component.js";
+import AnimalCharacterV2 from "./models/characters/animal.character.v2.js";
 import GuestCharacter from "./models/characters/guest.character.js";
 import WorkerCharacter from "./models/characters/worker.character.js";
 import Counter from "./models/counter.js";
@@ -240,7 +241,11 @@ export default class Game extends Component {
             _character = new GuestCharacter(it);
             break;
           }
-          case characterType.dog:
+          case characterType.dog: {
+            _character = new AnimalCharacterV2(it);
+
+            break;
+          }
           default: {
             console.warn("unknown character type", it);
           }

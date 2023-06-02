@@ -124,7 +124,7 @@ export default class CharacterV2 {
       this,
       {
         id: generateId(4),
-        speed: 1,
+        speed: prefab?.speed || 1,
       },
       props,
       {
@@ -139,7 +139,7 @@ export default class CharacterV2 {
       }
     );
 
-    this._health = new Counter({ min: 0, value: health });
+    this._health = new Counter({ min: 0, value: health || 1 });
     this._money = new Counter({ min: 0, value: money });
     this.cooldowns = new Map();
 
@@ -193,6 +193,10 @@ export default class CharacterV2 {
     if (this.comment) {
       this.comment.remove();
     }
+  }
+
+  damage(value) {
+    this._health.remove(value);
   }
 
   getRandomComment() {
@@ -299,7 +303,9 @@ export default class CharacterV2 {
   }
 
   move(speed = 1) {
-    const { coordinates, targetCell } = this;
+    const { coordinates } = this;
+
+    let targetCell = this.path[0];
 
     if (!targetCell) {
       return false;
@@ -310,14 +316,20 @@ export default class CharacterV2 {
       y: targetCell.y - coordinates.y,
     };
 
-    if (!distance.x && !distance.y) {
-      this.path?.shift();
+    const isOnPoint = !distance.x && !distance.y
 
+    if (isOnPoint) {
+      this.path?.shift();
+    }
+
+    if (isOnPoint && !this.path?.length) {
       this.stop();
       this.on(characterEvents.point, {
         cell: targetCell,
       });
       return true;
+    } else if (isOnPoint) {
+      return this.move(speed);
     }
 
     const direction = {

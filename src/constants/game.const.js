@@ -3,7 +3,6 @@ export const TARGET_FPS = 45;
 export const MAX_FPS = 60;
 
 export const CHARACTER_TYPES = {
-  UNKNOWN: 0,
   HUMAN: 1,
   DOG: 2,
   CAT: 3

@@ -28,6 +28,8 @@ export const characterType = {
   worker: 3,
 };
 
+export const charactersSpawnPool = [characterType.guest, characterType.dog];
+
 export const characterEvents = {
   none: 0,
   point: 1,
@@ -45,6 +47,7 @@ export const characterActionType = {
   exit: 8,
   decide: 9,
   pay: 10,
+  retriete: 11,
 };
 
 export const characterPrefabs = [
@@ -82,6 +85,7 @@ export const characterPrefabs = [
   },
   {
     type: characterType.dog,
+    speed: 1.2,
     sprite: {
       url: "./src/assets/bundle.sprite.png",
       tile: { size: 64, position: { x: 0, y: 1 } },
@@ -90,6 +94,7 @@ export const characterPrefabs = [
   },
   {
     type: characterType.dog,
+    speed: 1.3,
     sprite: {
       url: "./src/assets/bundle.sprite.png",
       tile: { size: 64, position: { x: 1, y: 1 } },
@@ -98,6 +103,7 @@ export const characterPrefabs = [
   },
   {
     type: characterType.dog,
+    speed: 1.1,
     sprite: {
       url: "./src/assets/bundle.sprite.png",
       tile: { size: 64, position: { x: 2, y: 1 } },

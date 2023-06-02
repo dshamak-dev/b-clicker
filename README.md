@@ -1,11 +1,10 @@
 # TODO
-1. Required 
-  - add character comments grouped by event type
-  - update sprites, hide / show doors on business open state 
-  - reset session on day start and save summary on day end
+1. MVP Required 
   - add animals (dogs) to the game
+  - add character comments grouped by event type
+  - update sprites
   - add build minification and public folder as destination
-2. Optional
+2. MVP Optional
   - calculate path through collisions
   - add door animations and logic to block animals
   - scoreboard online

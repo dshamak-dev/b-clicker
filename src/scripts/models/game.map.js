@@ -2,6 +2,7 @@ import {
   characterActionType,
   characterPrefabs,
   characterType,
+  charactersSpawnPool,
 } from "../../constants/character.const.js";
 import { CHARACTER_TYPES } from "../../constants/game.const.js";
 import { MAP_CONFIG, mapPointType } from "../../constants/map.const.js";
@@ -24,11 +25,13 @@ import {
 import { getCollisionInArea, positionToLocation } from "../utils/grid.utils.js";
 import { getCurrentTheme } from "../utils/theme.utils.js";
 import { createThreshold } from "../utils/time.utils.js";
+import AnimalCharacter from "./characters/animal.character.js";
+import AnimalCharacterV2 from "./characters/animal.character.v2.js";
 import GuestCharacter from "./characters/guest.character.js";
 import DoorObject from "./objects/door.object.js";
 import Vector from "./vector.js";
 
-const SPAWN_DELAYS = [15 * 1000, 10 * 1000, 5 * 1000, 8 * 1000, 15 * 1000];
+const SPAWN_DELAYS = [10 * 1000, 5 * 1000, 5 * 1000, 7 * 1000, 11 * 1000];
 
 export default class GameMap extends Component {
   draft = true;
@@ -392,14 +395,28 @@ export default class GameMap extends Component {
 
     if (this.spawnThreshold) {
       this.spawnThreshold(() => {
-        const canEnter =
-          (this.session?.characters?.length || 0) < this.maxCharacters;
-        const isOpen = this.game?.business?.isOpen;
+        const type = getRandomArrayItem(charactersSpawnPool);
 
-        if (isOpen && canEnter) {
-          const _c = this.spawnCharacter();
+        switch (type) {
+          case characterType.guest: {
+            const canEnter =
+              (this.session?.characters?.length || 0) < this.maxCharacters;
+            const isOpen = this.game?.business?.isOpen;
 
-          this.game.save();
+            if (canEnter && isOpen) {
+              const _c = this.spawnCharacter(type);
+
+              this.game.save();
+            }
+
+            break;
+          }
+          default: {
+            const _c = this.spawnCharacter(type);
+
+            this.game.save();
+            break;
+          }
         }
 
         const hour = new Date().getHours();
@@ -655,18 +672,13 @@ export default class GameMap extends Component {
     this.characters.push(character);
   }
 
-  spawnCharacter(props) {
-    const canEnter = this.characters?.length < this.maxCharacters;
-
-    if (!canEnter) {
+  spawnCharacter(type) {
+    if (type == null) {
       return;
     }
 
-    const type = getRandomArrayItem(Object.values(CHARACTER_TYPES));
-
     switch (type) {
-      case CHARACTER_TYPES.HUMAN:
-      default: {
+      case characterType.guest: {
         const cell = this.getRandomSpawnPosition();
 
         const guestPrefabs = characterPrefabs.filter(
@@ -688,44 +700,31 @@ export default class GameMap extends Component {
 
         break;
       }
-      // default: {
-      // const position = this.getRandomSpawnPosition();
-      // const targetPoint = props?.path
-      //   ? props.path[0]
-      //   : this.getSeatPositionForCharacter(type)?.position;
+      case characterType.dog: {
+        const cell = this.getRandomSpawnPosition();
 
-      // const character = createCharacter(
-      //   type,
-      //   Object.assign(
-      //     {
-      //       position,
-      //       path: targetPoint ? [targetPoint] : [],
-      //       sprite: {
-      //         url: "./src/assets/characters.sprite.png",
-      //         image: this.charactersSprite.el,
-      //       },
-      //     },
-      //     props
-      //   )
-      // );
+        const animalPrefabs = characterPrefabs.filter(
+          (p) => p.type === characterType.dog
+        );
+        const prefab = getRandomArrayItem(animalPrefabs);
 
-      // if (!canEnter && character instanceof HumanCharacter) {
-      //   this.game.possibleMoney.add(character.budget);
-      //   character.destroy();
-      // }
+        if (prefab == null) {
+          break;
+        }
 
-      // if (
-      //   !this.allowEnter ||
-      //   !canEnter ||
-      //   !targetPoint == null ||
-      //   character == null
-      // ) {
-      //   return;
-      // }
+        const _c = new AnimalCharacterV2({
+          prefab,
+          coordinates: cell,
+        });
+        _c.do(characterActionType.search);
 
-      // this.characters.push(character);
-      //   break;
-      // }
+        this.game.addCharacter(_c);
+
+        break;
+      }
+      default: {
+        break;
+      }
     }
   }
 
