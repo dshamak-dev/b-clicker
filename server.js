@@ -16,6 +16,7 @@ const types = {
   gif: 'image/gif',
   json: 'application/json',
   xml: 'application/xml',
+  mp3: 'audio/mpeg',
 };
 
 const root = path.normalize(path.resolve(__dirname, directoryName));

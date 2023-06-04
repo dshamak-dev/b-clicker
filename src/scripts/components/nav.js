@@ -21,9 +21,23 @@ export default class Nav extends Component {
     const self = this;
 
     const infoBtn = new Component({
-      style: 'flex-grow: 0; text-align: left;',
+      style: "display: inline-flex; justify-content: space-between; flex-grow: 1; text-align: left;",
       parent: this.el,
     });
+
+    const soundC = new Component({
+      style: `color: white; width: fit-content;`,
+      observer: () => {
+        return self.game?.sound?.muted ? "🔇" : "🔈";
+      },
+    });
+    soundC.el.onclick = () => {
+      if (self.game.sound) {
+        self.game.sound.toggleSound();
+      }
+
+      soundC.update();
+    };
 
     const speedC = new Component({
       style: `color: white; width: fit-content; margin: 0 auto;`,
@@ -36,7 +50,7 @@ export default class Nav extends Component {
       speedC.update();
     };
 
-    infoBtn.append(speedC);
+    infoBtn.append(soundC, speedC);
 
     const menuBtn = (this.menuBtn = new Component({
       parent: this.el,

@@ -10,6 +10,7 @@ import WorkerCharacter from "./models/characters/worker.character.js";
 import Counter from "./models/counter.js";
 import GameMoney from "./models/game.money.js";
 import Session from "./models/session/session.js";
+import Sound from "./models/sound.js";
 import Time from "./models/time.js";
 import GameScreen from "./screens/game.screen.js";
 import LandingScreen from "./screens/landing.screen.js";
@@ -36,6 +37,8 @@ export default class Game extends Component {
   session;
 
   speed;
+
+  sound;
 
   get ready() {
     return !this.loading && this.activeScreenId != null;
@@ -116,6 +119,13 @@ export default class Game extends Component {
 
     await this.load();
 
+    this.sound = new Sound(Object.assign({
+      url: './src/assets/audio/bg.mp3',
+      loop: true,
+      autoplay: false,
+      volume: 0.3
+    }, props.sound));
+
     this.update();
   }
 
@@ -190,8 +200,9 @@ export default class Game extends Component {
     const version = this.version;
     const history = this.history || [];
     const map = this.map?.json() || null;
+    const sound = this.sound?.json();
 
-    return { version, lastSessionId: sessionId, map, history };
+    return { version, sound, lastSessionId: sessionId, map, history };
   }
 
   render() {

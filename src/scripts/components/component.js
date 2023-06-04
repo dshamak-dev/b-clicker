@@ -10,7 +10,7 @@ export default class Component {
   observer;
   className;
   style;
-  fitForn;
+  fitFont;
   _children = [];
   time;
 

@@ -75,6 +75,10 @@ export default class GameScreen extends ScreenComponent {
       this.map.init();
     }
 
+    if (this.game.sound && !this.game.sound.muted) {
+      this.game.sound.play();
+    }
+
     if (this.game.session && !this.game.session.active) {
       this.game.session.start();
     }
@@ -117,6 +121,9 @@ export default class GameScreen extends ScreenComponent {
 
     this.game.speed.value = 0;
 
+    if (this.game.sound && !this.game.sound.muted) {
+      this.game.sound.pause();
+    }
 
     this.update();
 
