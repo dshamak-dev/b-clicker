@@ -4,7 +4,14 @@ export default class Sound extends Component {
   playing = false;
   ready;
 
-  constructor({ url, loop = false, autoplay = false, volume = 1, muted = false, ...props }) {
+  constructor({
+    url,
+    loop = false,
+    autoplay = false,
+    volume = 1,
+    muted = false,
+    ...props
+  }) {
     super(Object.assign({ tagType: "audio", parent: document.body }, props));
 
     Object.assign(this, {
@@ -12,7 +19,7 @@ export default class Sound extends Component {
       loop,
       autoplay,
       muted,
-      volume: volume != null ? volume : 1
+      volume: volume != null ? volume : 1,
     });
 
     if (this.el) {
@@ -22,7 +29,7 @@ export default class Sound extends Component {
 
       this.el.setAttribute("loop", loop ? "loop" : undefined);
       this.el.setAttribute("autoplay", autoplay ? "autoplay" : undefined);
-      this.el.setAttribute('volume', this.volume);
+      this.el.setAttribute("volume", this.volume);
       this.el.volume = this.volume;
 
       this.el.oncanplaythrough = () => {
@@ -68,6 +75,12 @@ export default class Sound extends Component {
       this.pause();
     } else {
       this.play();
+    }
+  }
+
+  setSpeed(value) {
+    if (this.el) {
+      this.el.playbackRate = value;
     }
   }
 }

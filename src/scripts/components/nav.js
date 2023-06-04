@@ -47,6 +47,11 @@ export default class Nav extends Component {
     });
     speedC.el.onclick = () => {
       self.game.speed.add(1);
+
+      if (self.game.sound) {
+        self.game.sound.setSpeed(self.game.gameSpeed);
+      }
+
       speedC.update();
     };
 

@@ -27,7 +27,7 @@ export default class GameScreen extends ScreenComponent {
     // this.animationTimer = new Timer();
     this.animationTimer = new Time({
       delay: 1000 / TARGET_FPS,
-      callback: () => this.tick()
+      callback: () => this.tick(),
     });
 
     this.nav = new Nav();
@@ -75,10 +75,6 @@ export default class GameScreen extends ScreenComponent {
       this.map.init();
     }
 
-    if (this.game.sound && !this.game.sound.muted) {
-      this.game.sound.play();
-    }
-
     if (this.game.session && !this.game.session.active) {
       this.game.session.start();
     }
@@ -88,6 +84,11 @@ export default class GameScreen extends ScreenComponent {
     }
 
     this.game.speed.value = 1;
+
+    if (this.game.sound && !this.game.sound.muted) {
+      this.game.sound.setSpeed(this.game.gameSpeed);
+      this.game.sound.play();
+    }
 
     GameTime.ups.start();
     GameTime.fps.start();
@@ -142,9 +143,9 @@ export default class GameScreen extends ScreenComponent {
     }
 
     // hide active comments
-    const comments = document.querySelectorAll('.character_comment');
+    const comments = document.querySelectorAll(".character_comment");
     comments?.forEach((el) => {
-      el.style.setProperty('opacity', 0);
+      el.style.setProperty("opacity", 0);
     });
 
     this.game?.save();
