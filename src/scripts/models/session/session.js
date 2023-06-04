@@ -1,11 +1,17 @@
 import {
   characterPrefabs,
+  characterStateType,
   characterType,
 } from "../../../constants/character.const.js";
 import { getGame } from "../../game.manager.js";
 import { putSession } from "../../utils/api.js";
 import { getRandomArrayItem } from "../../utils/array.utils.js";
-import { generateId } from "../../utils/data.utils.js";
+import {
+  generateId,
+  mapToArray,
+  mapToObject,
+  objectToMap,
+} from "../../utils/data.utils.js";
 import { toDate } from "../../utils/date.utils.js";
 import { createThreshold } from "../../utils/time.utils.js";
 import Cafe from "../business/cafe.js";
@@ -19,6 +25,7 @@ export default class Session {
   done = false;
   business;
   _characters;
+  _history;
 
   dayUpdateThreshold;
   daylightStrength = 1;
@@ -27,19 +34,19 @@ export default class Session {
     return this.lastUpdateAt == null;
   }
 
+  get history() {
+    return mapToObject(this._history);
+  }
+
   get characters() {
-    let characters = [];
-
-    this._characters?.forEach((c) => characters.push(c));
-
-    return characters;
+    return mapToArray(this._characters);
   }
 
   get game() {
     return getGame();
   }
 
-  constructor({ characters = [], business = {}, ...props }) {
+  constructor({ characters = [], business = {}, history, ...props }) {
     Object.assign(this, props);
 
     if (this.id == null) {
@@ -52,12 +59,19 @@ export default class Session {
 
     this.active = false;
     this._characters = new Map();
+    this._history = objectToMap(history);
 
     this.business = new Cafe(business);
 
     this.dayUpdateThreshold = createThreshold(30 * 60 * 1000);
 
-    characters?.forEach((c) => this.addCharacter(c));
+    characters
+      ?.filter((it) => {
+        return !it.states || !it.states.includes(characterStateType.disabled);
+      })
+      ?.forEach((c) => {
+        this.addCharacter(c);
+      });
   }
 
   save() {
@@ -65,11 +79,13 @@ export default class Session {
   }
 
   json() {
-    const { id, business, characters, startDate, done, lastUpdateAt } = this;
+    const { id, business, characters, startDate, done, lastUpdateAt, history } =
+      this;
 
     return {
       id,
       done,
+      history,
       lastUpdateAt,
       startDate,
       business: business?.json(),
@@ -91,6 +107,8 @@ export default class Session {
   }
 
   deleteCharacter(id) {
+    this._history.set(id, this.getCharacter(id));
+
     return this._characters.delete(id);
   }
 

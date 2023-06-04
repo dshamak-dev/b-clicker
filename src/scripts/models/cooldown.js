@@ -16,7 +16,7 @@ export default class Cooldown {
   json() {
     const { sourceType, time, duration, actionType } = this;
 
-    return {sourceType, time, duration, actionType};
+    return { sourceType, time, duration, actionType };
   }
 
   start() {

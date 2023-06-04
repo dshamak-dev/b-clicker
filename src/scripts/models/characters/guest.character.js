@@ -2,7 +2,6 @@ import {
   characterActionType,
   characterEvents,
   characterStateType,
-  characterType,
 } from "../../../constants/character.const.js";
 import { mapPointType } from "../../../constants/map.const.js";
 import { getRandomArrayItem } from "../../utils/array.utils.js";
@@ -16,12 +15,16 @@ export default class GuestCharacter extends HumanCharacterV2 {
     return true;
   }
 
+  get canHit() {
+    return super.canHit && this.hasStatus(characterStateType.seat);
+  }
+
   constructor(props) {
     super(
       Object.assign(
         {
           money: getRandom(4, 20),
-          health: getRandom(3, 12),
+          health: getRandom(3, 5),
         },
         props
       )
@@ -40,28 +43,11 @@ export default class GuestCharacter extends HumanCharacterV2 {
       return true;
     }
 
-    if (this.hasStatus(characterStateType.seat)) {
-      const comment = this.getRandomComment();
+    // if (this.hasStatus(characterStateType.seat)) {
+    //   const comment = this.getRandomComment();
 
-      this.say(comment);
-    }
-  }
-
-  on(type, props) {
-    super.on(type, props);
-
-    // events
-    switch (type) {
-      case characterEvents.point: {
-        const cellInfo = this.map.getCellInfo(props.cell);
-
-        this.onPoint(cellInfo);
-        break;
-      }
-      default: {
-        break;
-      }
-    }
+    //   this.say(comment);
+    // }
   }
 
   onPoint(point) {
@@ -71,13 +57,6 @@ export default class GuestCharacter extends HumanCharacterV2 {
      * leave: -> doors -> exit
      * seat -> action (delay) -> order / leave
      */
-
-    switch (this.activeActionType) {
-      case characterActionType.exit: {
-        this.game.removeCharacter(this.id);
-        return false;
-      }
-    }
 
     if (point == null) {
       return false;
@@ -93,10 +72,14 @@ export default class GuestCharacter extends HumanCharacterV2 {
         if (!this.hasStatus(characterStateType.order)) {
           this.addStatus(characterStateType.order);
         }
+
+        if (!this.nextOrderItem) {
+          this.nextOrderItem = this.game.business?.getOrderPrice(this.money);
+        }
         // wait for order resolve and say / show order icon
         // canOrder ? order : search
         const waitTime = 3000;
-        this.say("⏳", waitTime);
+        this.say(`${this.nextOrderItem?.icon || "⏳"}`, waitTime);
 
         this.startCooldown(
           characterActionType.order,
@@ -124,6 +107,7 @@ export default class GuestCharacter extends HumanCharacterV2 {
 
     switch (action) {
       case characterActionType.exit: {
+        this.addStatus(characterStateType.disabled);
         // clear action states
         this.removeStatus(characterStateType.order);
         this.forget("seatPosition");
@@ -135,6 +119,10 @@ export default class GuestCharacter extends HumanCharacterV2 {
         // hasSeat ? goToSeat : exit
         if (this.hasStatus(characterStateType.order)) {
           this.removeStatus(characterStateType.order);
+        }
+
+        if (this.nextOrderItem != null) {
+          this.damage(1);
         }
 
         if (!this.game?.business?.isOpen) {
@@ -206,17 +194,18 @@ export default class GuestCharacter extends HumanCharacterV2 {
         this.removeStatus(characterStateType.order);
         this.stopCooldown(characterActionType.order);
 
-        const orderItem = this.game.business?.getOrderPrice(this.money);
+        const orderItem = this.nextOrderItem;
 
         if (orderItem == null || this.money < orderItem.price) {
-          console.warn("no money", { money: this.money, orderItem });
-          this.say("doraga!");
+          // console.warn("no money", { money: this.money, orderItem });
+          this.say(getRandomArrayItem(["ah, no thanks!", "goodbye", "bye bye"]));
           this.do(characterActionType.exit);
           return false;
         }
 
+        this.nextOrderItem = null;
         this.spend(orderItem.price);
-        this.say(`${orderItem.icon} - ${orderItem.price}`);
+        this.say(`+${orderItem.price}`);
         this.game?.business?.receive(orderItem.price);
 
         this.do(characterActionType.search);

@@ -1,4 +1,5 @@
 import {
+  characterActionType,
   characterEvents,
   characterStateType,
 } from "../../constants/character.const.js";
@@ -19,7 +20,6 @@ import GameComment from "./game.comment.js";
 import Sprite from "./sprite.js";
 import Cooldown from "./cooldown.js";
 import Vector from "./vector.js";
-import Time from "./time.js";
 import GameTime from "./game.time.js";
 
 export default class CharacterV2 {
@@ -33,6 +33,10 @@ export default class CharacterV2 {
 
   // private
   _health;
+
+  get canHit() {
+    return this.prefab?.hitable;
+  }
 
   get health() {
     return this._health?.value || 0;
@@ -193,14 +197,31 @@ export default class CharacterV2 {
     if (this.comment) {
       this.comment.remove();
     }
+
+    // todo: calculate damage
+    if (this.canHit) {
+      this.on(characterEvents.hit);
+    }
+  }
+
+  hit(damage = 1) {
+    this.say(this.getRandomComment("hit"));
+
+    this.damage(damage);
   }
 
   damage(value) {
     this._health.remove(value);
+
+    if (this.health <= 0) {
+      this.on(characterEvents.defeat);
+    }
   }
 
-  getRandomComment() {
-    return getRandomArrayItem(this.prefab?.comments || []);
+  getRandomComment(group = "talk") {
+    return getRandomArrayItem(
+      this.prefab?.comments ? this.prefab?.comments[group] || [] : []
+    );
   }
 
   say(text, time = undefined) {
@@ -316,7 +337,7 @@ export default class CharacterV2 {
       y: targetCell.y - coordinates.y,
     };
 
-    const isOnPoint = !distance.x && !distance.y
+    const isOnPoint = !distance.x && !distance.y;
 
     if (isOnPoint) {
       this.path?.shift();
@@ -355,6 +376,29 @@ export default class CharacterV2 {
     switch (type) {
       case characterEvents.point: {
         this.map.registerCharacterPosition(this.coordinates, this.id);
+
+        if (this.hasStatus(characterStateType.disabled) && !this.path?.length) {
+          this.game.removeCharacter(this.id);
+          return false;
+        }
+
+        if (this.onPoint) {
+          const cellInfo = this.map.getCellInfo(props.cell);
+          this.onPoint(cellInfo);
+        }
+
+        break;
+      }
+      case characterEvents.hit: {
+        if (!this.hasStatus(characterStateType.disabled)) {
+          this.hit(1);
+        }
+        break;
+      }
+      case characterEvents.defeat: {
+        this.states = [characterStateType.disabled];
+
+        this.do(characterActionType.exit);
         break;
       }
       default: {
@@ -362,9 +406,21 @@ export default class CharacterV2 {
       }
     }
   }
+  
+  onPoint(cellInfo) {}
 
   do(actionType, props) {
     this.activeActionType = actionType;
+
+    switch (actionType) {
+      case characterActionType.exit: {
+        if (this.cooldowns) {
+          this.cooldowns.clear();
+        }
+
+        break;
+      }
+    }
   }
 
   remember(key, value) {

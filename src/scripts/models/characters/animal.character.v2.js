@@ -23,33 +23,18 @@ export default class AnimalCharacterV2 extends CharacterV2 {
   }
 
   poke() {
+    super.poke();
     /**
      * get hit
      * seat: change seat / leave
      */
-    this.damage(1);
+  }
+
+  hit(damage = 1) {
+    super.hit(damage);
 
     if (this.health > 0) {
       this.do(characterActionType.retriete);
-    } else {
-      this.do(characterActionType.exit);
-    }
-  }
-
-  on(type, props) {
-    super.on(type, props);
-
-    // events
-    switch (type) {
-      case characterEvents.point: {
-        const cellInfo = this.map.getCellInfo(props.cell);
-
-        this.onPoint(cellInfo);
-        break;
-      }
-      default: {
-        break;
-      }
     }
   }
 
@@ -60,13 +45,6 @@ export default class AnimalCharacterV2 extends CharacterV2 {
      * leave: -> doors -> exit
      * seat -> action (delay) -> order / leave
      */
-
-    switch (this.activeActionType) {
-      case characterActionType.exit: {
-        this.game.removeCharacter(this.id);
-        return false;
-      }
-    }
 
     if (point == null) {
       return false;

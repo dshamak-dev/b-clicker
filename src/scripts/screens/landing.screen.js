@@ -69,7 +69,7 @@ export default class LandingScreen extends ScreenComponent {
           }),
           new Component({
             style: "text-align: center;  text-transform: uppercase;",
-            observer: () => (this.isOpen ? "Open" : "Closed"),
+            observer: () => "Open", //(this.isOpen ? "Open" : "Closed"),
             fitFont: true,
           }),
           new Component({

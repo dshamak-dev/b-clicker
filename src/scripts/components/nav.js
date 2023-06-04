@@ -21,7 +21,7 @@ export default class Nav extends Component {
     const self = this;
 
     const infoBtn = new Component({
-      style: 'flex-grow: 1;',
+      style: 'flex-grow: 0; text-align: left;',
       parent: this.el,
     });
 

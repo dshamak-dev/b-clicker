@@ -19,6 +19,7 @@ export const characterStateType = {
   work: 5,
   talk: 6,
   order: 7,
+  disabled: 8,
 };
 
 export const characterType = {
@@ -28,11 +29,12 @@ export const characterType = {
   worker: 3,
 };
 
-export const charactersSpawnPool = [characterType.guest, characterType.dog];
+export const charactersSpawnPool = [characterType.guest, characterType.dog, characterType.guest, characterType.guest];
 
 export const characterEvents = {
   none: 0,
   point: 1,
+  hit: 2,
 };
 
 export const characterActionType = {
@@ -53,78 +55,118 @@ export const characterActionType = {
 export const characterPrefabs = [
   {
     type: characterType.guest,
+    hitable: true,
     sprite: {
       url: "./src/assets/bundle.sprite.png",
       tile: { size: 64, position: { x: 0, y: 0 } },
     },
-    comments: ["bububuu"],
+    comments: {
+      hit: ['ouch', 'wtf', 'stop it', '😡', '🤬', '😫', '😭'],
+      talk: [],
+      event: [],
+    },
   },
   {
     type: characterType.guest,
+    hitable: true,
     sprite: {
       url: "./src/assets/bundle.sprite.png",
       tile: { size: 64, position: { x: 1, y: 0 } },
     },
-    comments: ["ahahaha"],
+    comments: {
+      hit: ['ouch', 'wtf', 'stop it', '😡', '🤬', '😫', '😭'],
+      talk: [],
+      event: [],
+    },
   },
   {
     type: characterType.guest,
+    hitable: true,
     sprite: {
       url: "./src/assets/bundle.sprite.png",
       tile: { size: 64, position: { x: 2, y: 0 } },
     },
-    comments: ["ah"],
+    comments: {
+      hit: ['ouch', 'wtf', 'stop it', '😡', '🤬', '😫', '😭'],
+      talk: [],
+      event: [],
+    },
   },
   {
     type: characterType.guest,
+    hitable: true,
     sprite: {
       url: "./src/assets/bundle.sprite.png",
       tile: { size: 64, position: { x: 3, y: 0 } },
     },
-    comments: ["..."],
+    comments: {
+      hit: ['ouch', 'wtf', 'stop it', '😡', '🤬', '😫', '😭'],
+      talk: [],
+      event: [],
+    },
   },
   {
     type: characterType.dog,
     speed: 1.2,
+    hitable: true,
     sprite: {
       url: "./src/assets/bundle.sprite.png",
       tile: { size: 64, position: { x: 0, y: 1 } },
     },
-    comments: ["gaph"],
+    comments: {
+      hit: ['grrrr', 'hmhmhm'],
+      talk: [],
+      event: [],
+    },
   },
   {
     type: characterType.dog,
     speed: 1.3,
+    hitable: true,
     sprite: {
       url: "./src/assets/bundle.sprite.png",
       tile: { size: 64, position: { x: 1, y: 1 } },
     },
-    comments: ["uff"],
+    comments: {
+      hit: ['grrrr', 'hmhmhm'],
+      talk: [],
+      event: [],
+    },
   },
   {
     type: characterType.dog,
     speed: 1.1,
+    hitable: true,
     sprite: {
       url: "./src/assets/bundle.sprite.png",
       tile: { size: 64, position: { x: 2, y: 1 } },
     },
-    comments: ["tiafff"],
+    comments: {
+      hit: ['grrrr', 'hmhmhm'],
+      talk: [],
+      event: [],
+    },
   },
   {
     type: characterType.worker,
+    hitable: false,
     sprite: {
       url: "./src/assets/bundle.sprite.png",
       tile: { size: 64, position: { x: 0, y: 2 } },
     },
-    comments: [
-      "shalom",
-      "кукусики",
-      " попробуете фильтр на руанде?",
-      "добавить любви в напиток?",
-      "уматно!",
-      "не приходи без денег!",
-      "иди в трещину курицы с карточкой!",
-      "кэш или кэш",
-    ],
+    comments: {
+      hit: [],
+      talk: [
+        "shalom",
+        "кукусики",
+        " попробуете фильтр на руанде?",
+        "добавить любви в напиток?",
+        "уматно!",
+        "не приходи без денег!",
+        "иди в трещину курицы с карточкой!",
+        "кэш или кэш",
+      ],
+      event: [],
+    },
   },
 ];

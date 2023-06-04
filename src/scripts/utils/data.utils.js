@@ -87,6 +87,10 @@ export const mapToObject = (map) => {
 };
 
 export const objectToMap = (rec) => {
+  if (rec == null) {
+    return new Map();
+  }
+
   if (rec != null || !Object.keys(rec).length) {
     return new Map();
   }

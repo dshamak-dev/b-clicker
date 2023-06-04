@@ -169,7 +169,7 @@ export default class GameScreen extends ScreenComponent {
       this.map.update();
     }
 
-    self.el.setAttribute("frame-rate", this.time.fps);
+    // self.el.setAttribute("frame-rate", this.time.fps);
 
     // this.threshold(() => {
     //   if (gameSpeed) {

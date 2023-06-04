@@ -395,27 +395,29 @@ export default class GameMap extends Component {
 
     if (this.spawnThreshold) {
       this.spawnThreshold(() => {
+        const isOpen = this.game?.business?.isOpen;
         const type = getRandomArrayItem(charactersSpawnPool);
 
-        switch (type) {
-          case characterType.guest: {
-            const canEnter =
-              (this.session?.characters?.length || 0) < this.maxCharacters;
-            const isOpen = this.game?.business?.isOpen;
+        if (isOpen) {
+          switch (type) {
+            case characterType.guest: {
+              const canEnter =
+                (this.session?.characters?.length || 0) < this.maxCharacters;
 
-            if (canEnter && isOpen) {
+              if (canEnter) {
+                const _c = this.spawnCharacter(type);
+
+                this.game.save();
+              }
+
+              break;
+            }
+            default: {
               const _c = this.spawnCharacter(type);
 
               this.game.save();
+              break;
             }
-
-            break;
-          }
-          default: {
-            const _c = this.spawnCharacter(type);
-
-            this.game.save();
-            break;
           }
         }
 
@@ -424,7 +426,7 @@ export default class GameMap extends Component {
         const sDelay = SPAWN_DELAYS[dayPart] || SPAWN_DELAYS[0];
         const delayMS = sDelay / this.gameSpeed;
 
-        this.nextSpawnDelay = getRandom(delayMS, delayMS * 2);
+        this.nextSpawnDelay = isOpen ? getRandom(delayMS, delayMS * 2) : 0;
       }, this.nextSpawnDelay);
     }
   }
@@ -938,7 +940,7 @@ export default class GameMap extends Component {
 
   renderStats() {
     const current = this.game?.business?.bank || 0;
-    const possible = this.game.possibleMoney.money;
+    // const possible = this.game.possibleMoney.money;
 
     const map = this;
     const rCtx = map?.renderContext;
@@ -950,21 +952,15 @@ export default class GameMap extends Component {
     // const widthInCols = 3;
     // const gridSize = map.gridSize;
 
-    const startCol = 2;
+    const startCol = 4;
     const startRow = 0;
 
-    const animalCounter = this.game?.animalCounter?.value || 0;
+    // const animalCounter = this.game?.animalCounter?.value || 0;
 
     map.renderText(
       startCol,
       startRow,
-      `Animals: ${formatNumberOutput(
-        animalCounter,
-        4
-      )}; Money: ${formatNumberOutput(current, 3)} / ${formatNumberOutput(
-        possible,
-        3
-      )}`,
+      `Money: ${formatNumberOutput(current, 3)}`,
       "white"
     );
   }
