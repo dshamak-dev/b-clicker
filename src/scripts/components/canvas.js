@@ -1,7 +1,4 @@
-import Character from "../models/character.js";
-import { getRandomArrayItem } from "../utils/array.utils.js";
 import { getScreenContentSize } from "../utils/dom.utils.js";
-import { getCurrentTheme } from "../utils/theme.utils.js";
 import Component from "./component.js";
 
 export default class Canvas extends Component {

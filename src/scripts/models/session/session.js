@@ -78,6 +78,15 @@ export default class Session {
     putSession(this.json());
   }
 
+  record() {
+    const { business, ...other } = this.json();
+
+    return Object.assign({
+      business,
+      money: business?.bank || 0
+    }, other);
+  }
+
   json() {
     const { id, business, characters, startDate, done, lastUpdateAt, history } =
       this;

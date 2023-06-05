@@ -1,4 +1,4 @@
-import { WORKING_HOURS } from "../../constants/game.const.js";
+import { WORKING_HOURS, gameScreenType } from "../../constants/game.const.js";
 import Component from "../components/component.js";
 import ScreenComponent from "../components/screen.component.js";
 import { getGame } from "../game.manager.js";
@@ -16,21 +16,38 @@ export default class LandingScreen extends ScreenComponent {
       })
     );
 
-    const btnStyle = `font-size: 2rem;`;
+    const btnStyle = `font-size: 2rem; cursor: pointer; text-decoration: underline;`;
 
     const continueBtn = (this.continueBtn = new Component({
-      style: btnStyle,
-      observer: () => "tap to start",
+      style: `font-size: 2rem; cursor: pointer;`,
+      observer: () => {
+        const game = getGame();
+
+        if (game?.session && !game.session.draft) {
+          return "Continue";
+        }
+
+        return "Start New";
+      },
       onClick: () => getGame()?.start(),
     }));
     const restartBtn = (this.restartBtn = new Component({
-      style: btnStyle,
-      observer: () => (getGame()?.session ? "start new" : "tap to start"),
+      style: `font-size: 1.5rem; cursor: pointer;`,
+      observer: () => "Start New",
       onClick: () => {
         const game = getGame();
 
         game?.restart();
         game?.start();
+      },
+    }));
+    const scoreBtn = (this.scoreBtn = new Component({
+      style: `font-size: 1rem; cursor: pointer;`,
+      observer: () => "View Scores",
+      onClick: () => {
+        const game = getGame();
+
+        game?.navigateToScreen(gameScreenType.scoreboard);
       },
     }));
 
@@ -74,8 +91,8 @@ export default class LandingScreen extends ScreenComponent {
           }),
           new Component({
             style:
-              "text-align: right; display: flex; flex-direction: column; gap: 2em;",
-            children: [continueBtn, restartBtn],
+              "text-align: right; color: white; display: flex; flex-direction: column; gap: 2em;",
+            children: [continueBtn, restartBtn, scoreBtn],
           }),
         ],
       })

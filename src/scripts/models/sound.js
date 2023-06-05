@@ -1,8 +1,7 @@
-import Component from "../components/component.js";
-
-export default class Sound extends Component {
+export default class Sound {
   playing = false;
   ready;
+  player;
 
   constructor({
     url,
@@ -12,8 +11,6 @@ export default class Sound extends Component {
     muted = false,
     ...props
   }) {
-    super(Object.assign({ tagType: "audio", parent: document.body }, props));
-
     Object.assign(this, {
       url,
       loop,
@@ -22,20 +19,22 @@ export default class Sound extends Component {
       volume: volume != null ? volume : 1,
     });
 
-    if (this.el) {
-      this.el.setAttribute("src", url);
-      this.el.setAttribute("type", "audio/mpeg");
-      this.el.setAttribute("preload", "auto");
+    this.setup();
+  }
 
-      this.el.setAttribute("loop", loop ? "loop" : undefined);
-      this.el.setAttribute("autoplay", autoplay ? "autoplay" : undefined);
-      this.el.setAttribute("volume", this.volume);
-      this.el.volume = this.volume;
+  setup() {
+    const { url, loop, autoplay, volume } = this;
 
-      this.el.oncanplaythrough = () => {
-        this.ready = true;
-      };
-    }
+    const player = (this.player = new Audio(url));
+
+    player.preload = "auto";
+    player.loop = loop;
+    player.autoplay = autoplay;
+    player.volume = volume;
+
+    player.oncanplaythrough = () => {
+      setTimeout(() => (this.ready = true), 0);
+    };
   }
 
   json() {
@@ -57,14 +56,18 @@ export default class Sound extends Component {
   }
 
   pause() {
-    if (this.el && this.el.play) {
-      this.el.pause();
+    const { player } = this;
+
+    if (player && player.pause) {
+      player.pause();
     }
   }
 
   play() {
-    if (this.el && this.el.play) {
-      this.el.play();
+    const { player } = this;
+
+    if (player && player.play) {
+      player.play();
     }
   }
 
@@ -79,8 +82,10 @@ export default class Sound extends Component {
   }
 
   setSpeed(value) {
-    if (this.el) {
-      this.el.playbackRate = value;
+    const { player } = this;
+
+    if (player && player.pause) {
+      player.playbackRate = value;
     }
   }
 }

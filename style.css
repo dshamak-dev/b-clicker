@@ -8,7 +8,9 @@ html {
 }
 
 body {
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
   background-color: #e1e1e1;
 }
 

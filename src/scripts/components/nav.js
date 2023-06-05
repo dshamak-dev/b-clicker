@@ -1,8 +1,9 @@
+import { gameScreenType } from "../../constants/game.const.js";
 import { getGame } from "../game.manager.js";
 import Component from "./component.js";
 
 export default class Nav extends Component {
-  constructor(props) {
+  constructor({ hideSpeed = false, hideSound = false, ...props } = {}) {
     super(
       Object.assign({}, props, {
         id: "nav",
@@ -28,6 +29,10 @@ export default class Nav extends Component {
     const soundC = new Component({
       style: `color: white; width: fit-content;`,
       observer: () => {
+        if (hideSound) {
+          return null;
+        }
+
         return self.game?.sound?.muted ? "🔇" : "🔈";
       },
     });
@@ -42,6 +47,10 @@ export default class Nav extends Component {
     const speedC = new Component({
       style: `color: white; width: fit-content; margin: 0 auto;`,
       observer: () => {
+        if (hideSpeed) {
+          return null;
+        }
+
         return `x${self.game?.gameSpeed}`;
       },
     });
@@ -87,20 +96,8 @@ export default class Nav extends Component {
 
   handleToggleMenu(e) {
     const game = getGame();
-    const landingScreen = game.screens[0];
-    const gameScreen = game.screens[1];
-
-    if (landingScreen == null) {
-      return;
-    }
-
-    if (landingScreen.visible) {
-      landingScreen.hide();
-      gameScreen?.show();
-    } else {
-      landingScreen.show();
-      gameScreen?.hide();
-    }
+    
+    game.navigateToScreen(gameScreenType.landing);
   }
 
   render() {

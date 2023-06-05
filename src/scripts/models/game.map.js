@@ -4,7 +4,6 @@ import {
   characterType,
   charactersSpawnPool,
 } from "../../constants/character.const.js";
-import { CHARACTER_TYPES } from "../../constants/game.const.js";
 import { MAP_CONFIG, mapPointType } from "../../constants/map.const.js";
 import Canvas from "../components/canvas.js";
 import Component from "../components/component.js";
@@ -25,7 +24,6 @@ import {
 import { getCollisionInArea, positionToLocation } from "../utils/grid.utils.js";
 import { getCurrentTheme } from "../utils/theme.utils.js";
 import { createThreshold } from "../utils/time.utils.js";
-import AnimalCharacter from "./characters/animal.character.js";
 import AnimalCharacterV2 from "./characters/animal.character.v2.js";
 import GuestCharacter from "./characters/guest.character.js";
 import DoorObject from "./objects/door.object.js";
@@ -426,7 +424,7 @@ export default class GameMap extends Component {
         const sDelay = SPAWN_DELAYS[dayPart] || SPAWN_DELAYS[0];
         const delayMS = sDelay / this.gameSpeed;
 
-        this.nextSpawnDelay = isOpen ? getRandom(delayMS, delayMS * 2) : 0;
+        this.nextSpawnDelay = (isOpen ? getRandom(delayMS, delayMS * 2) : 0) / this.game?.gameSpeed || 1;
       }, this.nextSpawnDelay);
     }
   }

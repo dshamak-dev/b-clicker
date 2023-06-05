@@ -2,7 +2,7 @@ import {
   characterPrefabs,
   characterType,
 } from "../constants/character.const.js";
-import { TARGET_FPS } from "../constants/game.const.js";
+import { TARGET_FPS, gameScreenType } from "../constants/game.const.js";
 import Component from "./components/component.js";
 import AnimalCharacterV2 from "./models/characters/animal.character.v2.js";
 import GuestCharacter from "./models/characters/guest.character.js";
@@ -14,6 +14,7 @@ import Sound from "./models/sound.js";
 import Time from "./models/time.js";
 import GameScreen from "./screens/game.screen.js";
 import LandingScreen from "./screens/landing.screen.js";
+import ScoreBoardScreen from "./screens/scoreboard.screen.js";
 import { getSession, putGameData } from "./utils/api.js";
 import { getRandomArrayItem } from "./utils/array.utils.js";
 import {
@@ -115,16 +116,22 @@ export default class Game extends Component {
     this.screens = [
       new LandingScreen({ parent: this.el }),
       new GameScreen({ parent: this.el, map: props?.map }),
+      new ScoreBoardScreen({ parent: this.el }),
     ];
 
     await this.load();
 
-    this.sound = new Sound(Object.assign({
-      url: './src/assets/audio/bg.mp3',
-      loop: true,
-      autoplay: false,
-      volume: 0.3
-    }, props.sound));
+    this.sound = new Sound(
+      Object.assign(
+        {
+          url: "./src/assets/audio/bg.mp3",
+          loop: true,
+          autoplay: false,
+          volume: 0.5,
+        },
+        props.sound
+      )
+    );
 
     this.update();
   }
@@ -133,22 +140,42 @@ export default class Game extends Component {
     this.screens[1].show();
     this.screens[0].hide();
 
-    // if (this.session.business && !this.session.business.isOpen) {
-    //   this.map.openDoors();
-    // }
-
     this.saveTime = new Time({
       delay: 60 / 1000,
       callback: () => this.tick(),
     });
   }
 
+  navigateToScreen(screenType) {
+    let screenIndex = 0;
+
+    switch (screenType) {
+      case gameScreenType.landing: {
+        screenIndex = 0;
+        break;
+      }
+      case gameScreenType.game: {
+        screenIndex = 1;
+        break;
+      }
+      case gameScreenType.scoreboard: {
+        screenIndex = 2;
+        break;
+      }
+    }
+
+    this.screens.forEach(it => it.hide());
+    this.screens[screenIndex].show();
+  }
+
   restart() {
     if (this.session) {
       this.session.end();
-      this.history.push(this.session.json());
+      this.history.push(this.session.record());
       this.session = null;
       this.createSession();
+
+      this.save();
     }
   }
 
@@ -159,6 +186,7 @@ export default class Game extends Component {
   tick() {
     if (this.session && !this.session.validate()) {
       this.restart();
+      this.navigateToScreen(gameScreenType.scoreboard);
     }
 
     this.session?.update();
